@@ -115,14 +115,39 @@ summary{cursor:pointer;color:#2454b8;font-size:13px}
     <div class="progress"><div id="bar"></div></div>
   </section>
 
+  <section class="panel controls" style="margin-top:12px">
+    <div class="qtop">
+      <div>
+        <div class="qtitle" style="font-size:16px">跨浏览器云同步</div>
+        <div class="subtitle" id="accountText">未登录：当前仍使用本机进度</div>
+      </div>
+      <span class="badge" id="syncStatus">未连接</span>
+    </div>
+    <div id="authArea" style="margin-top:12px">
+      <div class="grid">
+        <div><label>邮箱</label><input id="email" type="email" autocomplete="email" placeholder="你的邮箱" style="width:100%;padding:10px 12px;border:1px solid #d7dce5;border-radius:10px"></div>
+        <div><label>密码</label><input id="password" type="password" autocomplete="current-password" placeholder="至少 6 位" style="width:100%;padding:10px 12px;border:1px solid #d7dce5;border-radius:10px"></div>
+        <div style="display:flex;align-items:end;gap:8px"><button class="btn primary" id="loginBtn">登录</button><button class="btn" id="signupBtn">注册</button></div>
+        <div style="display:flex;align-items:end"><button class="btn" id="logoutBtn" style="display:none">退出登录</button></div>
+      </div>
+      <div class="mark">登录后，同一个账号在 Chrome、Edge、手机等设备上都会读取同一份刷题进度。未登录时仍可离线刷题。</div>
+    </div>
+  </section>
+
   <section id="app"></section>
   <div class="footer">
     题目与答案来自上传的历年真题 PDF；本网站只是离线刷题界面，不对原资料中的答案进行二次校订。
   </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script>
 let DATA = null;
+let supabase = null;
+let currentUser = null;
+let cloudReady = false;
+let syncing = false;
 let filtered = [];
 let currentIndex = 0;
 const $ = id => document.getElementById(id);
@@ -133,11 +158,65 @@ function progressMap(){
 }
 function saveProgress(m){localStorage.setItem(storageKey,JSON.stringify(m))}
 function getState(id){return progressMap()[id]||""}
-function setState(id,state){
+function setLocalState(id,state){
   const m=progressMap();
   if(state) m[id]=state; else delete m[id];
   saveProgress(m);
 }
+function setState(id,state){
+  setLocalState(id,state);
+  if(cloudReady && currentUser) syncOne(id,state);
+}
+async function syncOne(questionId,status){
+  if(!currentUser || !supabase) return;
+  syncing=true; updateSyncBadge("正在同步…");
+  try{
+    if(status){
+      const {error}=await supabase.from("quiz_progress").upsert({
+        user_id:currentUser.id, question_id:questionId, status, updated_at:new Date().toISOString()
+      },{onConflict:"user_id,question_id"});
+      if(error) throw error;
+    }else{
+      const {error}=await supabase.from("quiz_progress").delete().eq("user_id",currentUser.id).eq("question_id",questionId);
+      if(error) throw error;
+    }
+    updateSyncBadge("已同步");
+  }catch(e){
+    console.error(e); updateSyncBadge("同步失败（本机已保存）");
+  }finally{syncing=false;}
+}
+async function syncLocalToCloudAndLoad(){
+  if(!currentUser || !supabase) return;
+  syncing=true; updateSyncBadge("正在同步…");
+  try{
+    const {data:cloud,error}=await supabase.from("quiz_progress").select("question_id,status,updated_at").eq("user_id",currentUser.id);
+    if(error) throw error;
+    const cloudMap={};
+    (cloud||[]).forEach(r=>cloudMap[r.question_id]=r.status);
+    const local=progressMap();
+    const missing=[];
+    for(const [id,status] of Object.entries(local)){
+      if(status && !cloudMap[id]) missing.push({user_id:currentUser.id,question_id:id,status,updated_at:new Date().toISOString()});
+    }
+    if(missing.length){
+      const {error:e2}=await supabase.from("quiz_progress").upsert(missing,{onConflict:"user_id,question_id"});
+      if(e2) throw e2;
+      missing.forEach(r=>cloudMap[r.question_id]=r.status);
+    }
+    // Cloud is authoritative when a record already exists; local-only records have just been uploaded.
+    saveProgress(cloudMap);
+    updateSyncBadge("已同步");
+    render();
+  }catch(e){
+    console.error(e); updateSyncBadge("云同步失败（本机继续可用）");
+  }finally{syncing=false;}
+}
+function updateSyncBadge(text){
+  const el=document.getElementById("syncStatus");
+  if(el) el.textContent=text;
+}
+function category(q){return q.answerType||"fill"}
+
 function category(q){return q.answerType||"fill"}
 
 function populateYears(){
@@ -251,8 +330,54 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft") move(-1);
   if(e.key==="ArrowRight") move(1);
 });
+async function initCloud(){
+  if(!window.SUPABASE_CONFIG || !SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey || SUPABASE_CONFIG.url.includes("YOUR_")){
+    updateSyncBadge("未配置云同步"); return;
+  }
+  supabase=window.supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.anonKey);
+  const {data:{session}}=await supabase.auth.getSession();
+  await handleSession(session);
+  supabase.auth.onAuthStateChange((_event,session)=>{
+    setTimeout(()=>handleSession(session),0);
+  });
+}
+async function handleSession(session){
+  currentUser=session?.user||null;
+  const loginBtn=document.getElementById("loginBtn"), signupBtn=document.getElementById("signupBtn"), logoutBtn=document.getElementById("logoutBtn");
+  const email=document.getElementById("email"), password=document.getElementById("password"), account=document.getElementById("accountText");
+  if(currentUser){
+    cloudReady=true;
+    loginBtn.style.display="none"; signupBtn.style.display="none"; logoutBtn.style.display="inline-block";
+    email.style.display="none"; password.style.display="none";
+    account.textContent=`已登录：${currentUser.email||"当前账号"}`;
+    await syncLocalToCloudAndLoad();
+  }else{
+    cloudReady=false;
+    loginBtn.style.display="inline-block"; signupBtn.style.display="inline-block"; logoutBtn.style.display="none";
+    email.style.display="block"; password.style.display="block";
+    account.textContent="未登录：当前仍使用本机进度";
+    updateSyncBadge("未连接");
+  }
+}
+async function doLogin(){
+  const email=document.getElementById("email").value.trim(), password=document.getElementById("password").value;
+  if(!email||!password){alert("请输入邮箱和密码");return;}
+  const {error}=await supabase.auth.signInWithPassword({email,password});
+  if(error) alert("登录失败："+error.message);
+}
+async function doSignup(){
+  const email=document.getElementById("email").value.trim(), password=document.getElementById("password").value;
+  if(!email||password.length<6){alert("请输入邮箱，密码至少 6 位");return;}
+  const {data,error}=await supabase.auth.signUp({email,password});
+  if(error) alert("注册失败："+error.message);
+  else if(!data.session) alert("注册成功。请检查邮箱完成验证，然后再登录。");
+}
+document.getElementById("loginBtn").addEventListener("click",doLogin);
+document.getElementById("signupBtn").addEventListener("click",doSignup);
+document.getElementById("logoutBtn").addEventListener("click",async()=>{await supabase.auth.signOut();});
+
 fetch("questions.json").then(r=>r.json()).then(d=>{
-  DATA=d; populateYears(); applyFilters(true);
+  DATA=d; populateYears(); applyFilters(true); initCloud();
 }).catch(()=>{
   $("app").innerHTML='<div class="panel empty">questions.json 加载失败。请通过静态服务器打开本网站，或直接部署到 GitHub Pages。</div>';
 });
