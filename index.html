@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>北邮 801 通信原理真题刷题</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#fff; --text:#172033; --muted:#667085;
+  --primary:#2563eb; --primary2:#1d4ed8; --line:#e5e7eb;
+  --ok:#15803d; --bad:#dc2626; --shadow:0 8px 30px rgba(15,23,42,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
+button,select{font:inherit}
+.header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1100px;margin:auto;padding:14px 16px}
+.title{font-size:20px;font-weight:800}
+.subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.panel,.question-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.controls{padding:14px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+select{width:100%;padding:10px 12px;border:1px solid #d7dce5;border-radius:10px;background:#fff;color:var(--text)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.badge{padding:6px 9px;border-radius:999px;background:#eef4ff;color:#2454b8;font-size:12px}
+.progress{height:7px;background:#e9edf3;border-radius:999px;overflow:hidden;margin-top:12px}
+.progress>div{height:100%;width:0;background:var(--primary);transition:.2s}
+.question-card{margin-top:14px;padding:20px}
+.qtop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.qmeta{font-size:13px;color:var(--muted)}
+.qtitle{font-size:18px;font-weight:800;margin-top:4px}
+.qtext{margin-top:18px;white-space:pre-wrap;line-height:1.8;font-size:16px;overflow-wrap:anywhere}
+.bank{margin-top:14px;padding:12px;border-radius:12px;background:#f8fafc;border:1px dashed #cbd5e1}
+.bank-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.bank-text{white-space:pre-wrap;font-size:14px;line-height:1.65}
+.answer{margin-top:18px;padding:14px;border-radius:12px;background:#eff6ff;border-left:4px solid var(--primary);display:none}
+.answer.show{display:block}
+.answer-title{font-weight:800;margin-bottom:6px}
+.answer-text{white-space:pre-wrap;line-height:1.7}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn{border:1px solid #d5dae3;background:#fff;color:var(--text);padding:10px 13px;border-radius:10px;cursor:pointer}
+.btn:hover{background:#f8fafc}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.primary:hover{background:var(--primary2)}
+.btn.ok{color:var(--ok);border-color:#bbf7d0}
+.btn.bad{color:var(--bad);border-color:#fecaca}
+.btn.small{padding:7px 10px;font-size:13px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.nav .btn{flex:1}
+.footer{color:var(--muted);font-size:12px;text-align:center;padding:24px 8px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.mark{font-size:12px;color:var(--muted);margin-top:8px}
+details{margin-top:14px}
+summary{cursor:pointer;color:#2454b8;font-size:13px}
+@media(max-width:760px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wrap{padding:10px}
+  .question-card{padding:15px;border-radius:14px}
+  .qtitle{font-size:17px}
+  .qtext{font-size:15px;line-height:1.75}
+  .nav .btn{padding:11px 8px}
+}
+@media(max-width:420px){
+  .grid{grid-template-columns:1fr 1fr}
+  .title{font-size:18px}
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div class="title">北邮 801 通信原理历年真题刷题</div>
+    <div class="subtitle">选择题 · 填空题 · 判断题｜本地静态运行｜进度自动保存在浏览器</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel controls">
+    <div class="grid">
+      <div>
+        <label>年份</label>
+        <select id="year"></select>
+      </div>
+      <div>
+        <label>题型</label>
+        <select id="type">
+          <option value="all">全部题型</option>
+          <option value="choice">选择题</option>
+          <option value="fill">填空题</option>
+          <option value="judge">判断题</option>
+        </select>
+      </div>
+      <div>
+        <label>题号</label>
+        <select id="qid"></select>
+      </div>
+      <div>
+        <label>刷题模式</label>
+        <select id="mode">
+          <option value="all">全部</option>
+          <option value="unmastered">只看不会/未标记</option>
+          <option value="mastered">只看已掌握</option>
+        </select>
+      </div>
+    </div>
+    <div class="stats">
+      <span class="badge" id="stat"></span>
+      <span class="badge" id="progressText"></span>
+      <button class="btn small" id="randomBtn">随机一题</button>
+      <button class="btn small" id="resetBtn">清空本机进度</button>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+  </section>
+
+  <section id="app"></section>
+  <div class="footer">
+    题目与答案来自上传的历年真题 PDF；本网站只是离线刷题界面，不对原资料中的答案进行二次校订。
+  </div>
+</main>
+
+<script>
+let DATA = null;
+let filtered = [];
+let currentIndex = 0;
+const $ = id => document.getElementById(id);
+const storageKey = "bup801_quiz_progress_v1";
+
+function progressMap(){
+  try{return JSON.parse(localStorage.getItem(storageKey)||"{}")}catch(e){return {}}
+}
+function saveProgress(m){localStorage.setItem(storageKey,JSON.stringify(m))}
+function getState(id){return progressMap()[id]||""}
+function setState(id,state){
+  const m=progressMap();
+  if(state) m[id]=state; else delete m[id];
+  saveProgress(m);
+}
+function category(q){return q.answerType||"fill"}
+
+function populateYears(){
+  const y=$("year");
+  y.innerHTML='<option value="all">全部年份</option>'+DATA.years.map(x=>`<option value="${x}">${x} 年</option>`).join("");
+}
+function applyFilters(reset=true){
+  const y=$("year").value, t=$("type").value, mode=$("mode").value;
+  filtered=DATA.questions.filter(q=>{
+    if(y!=="all" && String(q.year)!==y) return false;
+    if(t!=="all" && category(q)!==t) return false;
+    const s=getState(q.id);
+    if(mode==="unmastered" && s==="mastered") return false;
+    if(mode==="mastered" && s!=="mastered") return false;
+    return true;
+  });
+  if(reset) currentIndex=0;
+  renderQid();
+  render();
+}
+function renderQid(){
+  const s=$("qid");
+  s.innerHTML=filtered.length?filtered.map((q,i)=>`<option value="${i}">${i+1}. ${q.year}｜${q.number}｜${q.type}</option>`).join(""):'<option>没有符合条件的题目</option>';
+  if(filtered.length) s.value=currentIndex;
+}
+function render(){
+  const app=$("app");
+  if(!filtered.length){
+    app.innerHTML='<div class="panel empty">当前筛选条件下没有题目。</div>';
+    $("stat").textContent="0 题";
+    $("progressText").textContent="0 / 0";
+    $("bar").style.width="0";
+    return;
+  }
+  const q=filtered[currentIndex];
+  const state=getState(q.id);
+  $("stat").textContent=`共 ${filtered.length} 题`;
+  $("progressText").textContent=`第 ${currentIndex+1} / ${filtered.length} 题`;
+  $("bar").style.width=((currentIndex+1)/filtered.length*100)+"%";
+
+  const bank=q.bank?`<details class="bank"><summary>展开本年度选项词库</summary><div class="bank-text">${esc(q.bank)}</div></details>`:"";
+  app.innerHTML=`
+  <article class="question-card">
+    <div class="qtop">
+      <div>
+        <div class="qmeta">${q.year} 年 · ${q.type} · ${q.number}</div>
+        <div class="qtitle">${q.answerType==="judge"?"判断题":q.answerType==="choice"?"选择题":"填空题"}</div>
+      </div>
+      <button class="btn small" onclick="openSource()">查看原题 PDF</button>
+    </div>
+    <div class="qtext">${esc(q.text)}</div>
+    ${bank}
+    <div class="answer" id="answer">
+      <div class="answer-title">参考答案</div>
+      <div class="answer-text">${esc(q.answer)}</div>
+      <div class="mark">答案按上传 PDF 中的参考答案整理；原资料可能存在错误或不妥之处。</div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="showBtn" onclick="toggleAnswer()">显示答案</button>
+      <button class="btn bad" onclick="mark('unknown')">标记：不会</button>
+      <button class="btn ok" onclick="mark('mastered')">标记：掌握</button>
+      <button class="btn" onclick="mark('')">取消标记</button>
+      <span class="mark">当前：${state==="mastered"?"已掌握":state==="unknown"?"不会":"未标记"}</span>
+    </div>
+    <div class="nav">
+      <button class="btn" onclick="move(-1)">上一题</button>
+      <button class="btn primary" onclick="move(1)">下一题</button>
+    </div>
+  </article>`;
+}
+function esc(s){
+  return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function toggleAnswer(){
+  const a=$("answer"), b=$("showBtn");
+  a.classList.toggle("show");
+  b.textContent=a.classList.contains("show")?"隐藏答案":"显示答案";
+}
+function move(d){
+  if(!filtered.length)return;
+  currentIndex=(currentIndex+d+filtered.length)%filtered.length;
+  $("qid").value=currentIndex;
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function mark(s){
+  if(!filtered.length)return;
+  setState(filtered[currentIndex].id,s);
+  render();
+}
+function openSource(){
+  if(!filtered.length)return;
+  const p=filtered[currentIndex].sourcePage||1;
+  window.open(`source.pdf#page=${p}`,"_blank");
+}
+$("year").addEventListener("change",()=>applyFilters(true));
+$("type").addEventListener("change",()=>applyFilters(true));
+$("mode").addEventListener("change",()=>applyFilters(true));
+$("qid").addEventListener("change",e=>{currentIndex=Number(e.target.value)||0;render()});
+$("randomBtn").addEventListener("click",()=>{
+  if(!filtered.length)return;
+  currentIndex=Math.floor(Math.random()*filtered.length);
+  $("qid").value=currentIndex; render();
+});
+$("resetBtn").addEventListener("click",()=>{
+  if(confirm("确定清空本机刷题进度吗？")){
+    localStorage.removeItem(storageKey); applyFilters(false);
+  }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft") move(-1);
+  if(e.key==="ArrowRight") move(1);
+});
+fetch("questions.json").then(r=>r.json()).then(d=>{
+  DATA=d; populateYears(); applyFilters(true);
+}).catch(()=>{
+  $("app").innerHTML='<div class="panel empty">questions.json 加载失败。请通过静态服务器打开本网站，或直接部署到 GitHub Pages。</div>';
+});
+</script>
+</body>
+</html>
