@@ -65,3 +65,16 @@ GitHub → Settings → Pages → Deploy from a branch → main → `/ (root)`�
 刷题进度表开启 Row Level Security（RLS），每个账号只能读写自己的 `quiz_progress` 行。
 
 题库 `questions.json` 和原题 PDF 是公开静态资源，不包含账号隐私。
+
+
+## 密码-only 云同步
+
+当前版本不再要求用户填写邮箱。网页内部使用一个固定的隐藏邮箱作为 Supabase 唯一账号标识，用户界面只显示“同步密码”。
+
+首次使用：
+1. 在 `config.js` 填入 Supabase URL 和 Publishable key。
+2. 在 Supabase → Authentication → Providers → Email 中关闭 Confirm Email。
+3. 网站中输入一个至少 6 位的同步密码，点击“首次设置密码”。
+4. 以后在任何 Chrome、Edge、手机上，只输入同一个密码并点击“登录同步”。
+
+注意：这是个人使用的简化方案。知道这个同步密码的人都能访问同一份刷题进度，因此不要使用容易猜的密码。

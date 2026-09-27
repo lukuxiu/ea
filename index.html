@@ -73,7 +73,7 @@ summary{cursor:pointer;color:#2454b8;font-size:13px}
 <header class="header">
   <div class="header-inner">
     <div class="title">北邮 801 通信原理历年真题刷题</div>
-    <div class="subtitle">选择题 · 填空题 · 判断题｜本地静态运行｜进度自动保存在浏览器</div>
+    <div class="subtitle">选择题 · 填空题 · 判断题｜GitHub Pages 静态网站｜支持跨浏览器云同步</div>
   </div>
 </header>
 
@@ -125,12 +125,22 @@ summary{cursor:pointer;color:#2454b8;font-size:13px}
     </div>
     <div id="authArea" style="margin-top:12px">
       <div class="grid">
-        <div><label>邮箱</label><input id="email" type="email" autocomplete="email" placeholder="你的邮箱" style="width:100%;padding:10px 12px;border:1px solid #d7dce5;border-radius:10px"></div>
-        <div><label>密码</label><input id="password" type="password" autocomplete="current-password" placeholder="至少 6 位" style="width:100%;padding:10px 12px;border:1px solid #d7dce5;border-radius:10px"></div>
-        <div style="display:flex;align-items:end;gap:8px"><button class="btn primary" id="loginBtn">登录</button><button class="btn" id="signupBtn">注册</button></div>
-        <div style="display:flex;align-items:end"><button class="btn" id="logoutBtn" style="display:none">退出登录</button></div>
+        <div>
+          <label>同步密码</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="输入你的同步密码" style="width:100%;padding:10px 12px;border:1px solid #d7dce5;border-radius:10px">
+        </div>
+        <div style="display:flex;align-items:end;gap:8px">
+          <button class="btn primary" id="loginBtn">登录同步</button>
+          <button class="btn" id="signupBtn">首次设置密码</button>
+        </div>
+        <div style="display:flex;align-items:end">
+          <button class="btn" id="logoutBtn" style="display:none">退出登录</button>
+          <button class="btn small" id="testBtn">测试云连接</button>
+        </div>
       </div>
-      <div class="mark">登录后，同一个账号在 Chrome、Edge、手机等设备上都会读取同一份刷题进度。未登录时仍可离线刷题。</div>
+      <div class="mark">只需要记住一个同步密码，不显示、不填写邮箱。这个密码用于登录同一份云端刷题进度；在 Chrome、Edge、手机上输入同一个密码即可同步。</div>
+      <div class="mark" style="color:#b42318">首次使用：先点「首次设置密码」创建云端账号，以后只点「登录同步」。</div>
+      <div class="mark" id="authHint" style="color:#b42318"></div>
     </div>
   </section>
 
@@ -141,6 +151,19 @@ summary{cursor:pointer;color:#2454b8;font-size:13px}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// 如果第一个 CDN 被网络/浏览器拦截，自动尝试备用 CDN。
+window.__loadSupabaseFallback = function(){
+  if(window.supabase) return Promise.resolve();
+  return new Promise(function(resolve,reject){
+    var sc=document.createElement("script");
+    sc.src="https://unpkg.com/@supabase/supabase-js@2";
+    sc.onload=function(){resolve()};
+    sc.onerror=function(){reject(new Error("Supabase JS CDN 加载失败，请检查网络或 GitHub Pages 的浏览器控制台"))};
+    document.head.appendChild(sc);
+  });
+};
+</script>
 <script src="config.js"></script>
 <script>
 let DATA = null;
@@ -331,50 +354,103 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ArrowRight") move(1);
 });
 async function initCloud(){
-  if(!window.SUPABASE_CONFIG || !SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey || SUPABASE_CONFIG.url.includes("YOUR_")){
-    updateSyncBadge("未配置云同步"); return;
+  if(!window.supabase){
+    try { await window.__loadSupabaseFallback(); }
+    catch(e){
+      updateSyncBadge("SDK加载失败");
+      document.getElementById("authHint").textContent="云同步组件加载失败：请检查网络，或打开浏览器 F12 → Console 查看错误。";
+      return;
+    }
   }
-  supabase=window.supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.anonKey);
-  const {data:{session}}=await supabase.auth.getSession();
-  await handleSession(session);
-  supabase.auth.onAuthStateChange((_event,session)=>{
-    setTimeout(()=>handleSession(session),0);
-  });
+  if(!window.SUPABASE_CONFIG || !SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey || SUPABASE_CONFIG.url.includes("YOUR_")){
+    updateSyncBadge("未配置云同步"); document.getElementById("authHint").textContent="请先在 config.js 填入 Publishable Key。"; return;
+  }
+  try{
+    if(!window.supabase || typeof window.supabase.createClient !== "function") throw new Error("Supabase JS SDK 未加载");
+    supabase=window.supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.anonKey);
+    const {data:{session},error}=await supabase.auth.getSession();
+    if(error) throw error;
+    await handleSession(session);
+    supabase.auth.onAuthStateChange((_event,session)=>{
+      setTimeout(()=>handleSession(session),0);
+    });
+  }catch(e){
+    console.error("Supabase 初始化失败",e);
+    updateSyncBadge("连接失败");
+    document.getElementById("accountText").textContent="云同步连接失败"; document.getElementById("authHint").textContent="错误："+(e.message||e);
+  }
 }
+// 为了实现“只输入密码”，网站在 Supabase 内部使用一个固定的隐藏邮箱作为唯一账号。
+// 这个邮箱不会显示给用户；所有设备只需输入同一个密码即可登录同一份进度。
+const INTERNAL_EMAIL = "bupt801.sync@example.com";
+
 async function handleSession(session){
   currentUser=session?.user||null;
   const loginBtn=document.getElementById("loginBtn"), signupBtn=document.getElementById("signupBtn"), logoutBtn=document.getElementById("logoutBtn");
-  const email=document.getElementById("email"), password=document.getElementById("password"), account=document.getElementById("accountText");
+  const password=document.getElementById("password"), account=document.getElementById("accountText");
   if(currentUser){
     cloudReady=true;
     loginBtn.style.display="none"; signupBtn.style.display="none"; logoutBtn.style.display="inline-block";
-    email.style.display="none"; password.style.display="none";
-    account.textContent=`已登录：${currentUser.email||"当前账号"}`;
+    password.style.display="none";
+    account.textContent="已登录：云端进度同步中";
+    document.getElementById("authHint").textContent="同一个密码可在其他浏览器/手机登录同一份进度。";
     await syncLocalToCloudAndLoad();
   }else{
     cloudReady=false;
     loginBtn.style.display="inline-block"; signupBtn.style.display="inline-block"; logoutBtn.style.display="none";
-    email.style.display="block"; password.style.display="block";
+    password.style.display="block";
     account.textContent="未登录：当前仍使用本机进度";
     updateSyncBadge("未连接");
   }
 }
+
 async function doLogin(){
-  const email=document.getElementById("email").value.trim(), password=document.getElementById("password").value;
-  if(!email||!password){alert("请输入邮箱和密码");return;}
-  const {error}=await supabase.auth.signInWithPassword({email,password});
-  if(error) alert("登录失败："+error.message);
+  if(!supabase){ document.getElementById("authHint").textContent="云同步尚未连接，请先看“同步状态”。"; return; }
+  const password=document.getElementById("password").value;
+  if(!password){ document.getElementById("authHint").textContent="请输入同步密码。"; return; }
+  document.getElementById("authHint").textContent="正在登录并读取云端进度…";
+  try{
+    const {error}=await supabase.auth.signInWithPassword({email:INTERNAL_EMAIL,password});
+    if(error) throw error;
+  }catch(e){
+    console.error("登录错误",e);
+    document.getElementById("authHint").textContent="登录失败："+(e.message||e);
+    updateSyncBadge("登录失败");
+  }
 }
+
 async function doSignup(){
-  const email=document.getElementById("email").value.trim(), password=document.getElementById("password").value;
-  if(!email||password.length<6){alert("请输入邮箱，密码至少 6 位");return;}
-  const {data,error}=await supabase.auth.signUp({email,password});
-  if(error) alert("注册失败："+error.message);
-  else if(!data.session) alert("注册成功。请检查邮箱完成验证，然后再登录。");
+  if(!supabase){ document.getElementById("authHint").textContent="云同步尚未连接，请先看“同步状态”。"; return; }
+  const password=document.getElementById("password").value;
+  if(password.length<6){ document.getElementById("authHint").textContent="同步密码至少 6 位，建议使用较强密码。"; return; }
+  if(!confirm("确定用当前密码创建唯一的云同步账号吗？以后所有设备只需要输入这个密码即可同步。")) return;
+  document.getElementById("authHint").textContent="正在创建云端账号…";
+  try{
+    const {data,error}=await supabase.auth.signUp({email:INTERNAL_EMAIL,password});
+    if(error) throw error;
+    if(data.session){
+      document.getElementById("authHint").textContent="创建成功，已经自动登录并开始同步！";
+    }else{
+      document.getElementById("authHint").textContent="创建成功，但 Supabase 仍要求邮箱确认。请在 Supabase 的 Email Provider 中关闭 Confirm Email 后再试。";
+    }
+  }catch(e){
+    console.error("首次设置密码错误",e);
+    document.getElementById("authHint").textContent="创建失败："+(e.message||e)+"。如果已经创建过账号，请直接使用“登录同步”。";
+  }
 }
 document.getElementById("loginBtn").addEventListener("click",doLogin);
 document.getElementById("signupBtn").addEventListener("click",doSignup);
-document.getElementById("logoutBtn").addEventListener("click",async()=>{await supabase.auth.signOut();});
+document.getElementById("logoutBtn").addEventListener("click",async()=>{if(supabase) await supabase.auth.signOut();});
+document.getElementById("testBtn").addEventListener("click",async()=>{
+  const hint=document.getElementById("authHint");
+  if(!supabase){hint.textContent="测试失败：Supabase 尚未初始化。同步状态："+document.getElementById("syncStatus").textContent;return;}
+  try{
+    const {data,error}=await supabase.auth.getSession();
+    if(error) throw error;
+    hint.textContent="云连接正常。当前会话："+(data.session?"已登录":"未登录");
+    updateSyncBadge("连接正常");
+  }catch(e){hint.textContent="云连接失败："+(e.message||e);updateSyncBadge("连接失败");}
+});
 
 fetch("questions.json").then(r=>r.json()).then(d=>{
   DATA=d; populateYears(); applyFilters(true); initCloud();
