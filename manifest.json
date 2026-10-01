@@ -1,9 +1,9 @@
 {
-  "name": "Olu",
-  "short_name": "Olu",
+  "name": "英语作文",
+  "short_name": "英语作文",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fbf9f6",
   "theme_color": "#9c5f44",
-  "description": "轻若清风，极速破局。2 套通用母版通吃小作文，3 大论证轨道通吃大作文，考场挖空装配极速神器"
+  "description": "简单明了，极速提分。2 套通用母版通吃小作文，3 大论证轨道通吃大作文，考场挖空装配极速神器"
 }

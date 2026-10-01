@@ -913,6 +913,463 @@
     }
   };
 
+  // Exam Scoring & Rubric Data (from PDF p. 1-8, 28-30, 48-49)
+  const EXAM_RUBRIC_DATA = [
+    {
+      tier: "第一档 (高分段)",
+      rangeA: "9–10 分",
+      rangeB: "17–20 分 (英一) / 13–15 分 (英二)",
+      tagClass: "rubric-tag-t1",
+      task: "完全切题，所有写作要点全部回应，无遗漏",
+      cc: "衔接极其自然，逻辑推进层层递进，段落衔接清晰地道",
+      lr: "词汇使用得体准确，动词描述性强，多用无灵主语与高阶学术搭配",
+      gra: "句式多样（倒装、定从、非谓语、强调句），极少或无语法拼写错误"
+    },
+    {
+      tier: "第二档 (良好段)",
+      rangeA: "7–8 分",
+      rangeB: "13–16 分 (英一) / 10–12 分 (英二)",
+      tagClass: "rubric-tag-t2",
+      task: "基本切题，主要要点均有回应，部分细节有小偏差",
+      cc: "逻辑较清晰，使用了常见逻辑连接词，结构完整",
+      lr: "词汇基本满足要求，有少量中级词汇，偶尔有搭配小不当",
+      gra: "句式有一定变化，存在少量次要语法或拼写错误，但不影响理解"
+    },
+    {
+      tier: "第三档 (及格段)",
+      rangeA: "5–6 分",
+      rangeB: "9–12 分 (英一) / 7–9 分 (英二)",
+      tagClass: "rubric-tag-t3",
+      task: "部分切题，遗漏重要要点，或有泛泛而谈倾向",
+      cc: "结构松散，衔接词生搬硬套，段落说理逻辑不严密",
+      lr: "词汇单一匮乏，重复使用初中简单词（good, make, think）",
+      gra: "简单句占主导，语法错误较多（时态主谓不一致），勉强达意"
+    },
+    {
+      tier: "第四档以下 (扣分危险区)",
+      rangeA: "0–4 分",
+      rangeB: "0–8 分 (英一) / 0–6 分 (英二)",
+      tagClass: "rubric-tag-t4",
+      task: "严重跑题，字数不足（小作文<70，大作文<130），或模板痕迹太重",
+      cc: "条理混乱，前后矛盾，不知所云",
+      lr: "大面积词不达意，拼写错误严重",
+      gra: "语法破损，大量病句，甚至出现中式逐字生造句"
+    }
+  ];
+
+  const EXAM_PRESOLVE_TOPICS = [
+    {
+      title: "母题 1：个人成长、求学深造与人生态度",
+      years: "真题覆盖：2003温室花朵 / 2006追星 / 2012撒半杯水 / 2013毕业生去向 / 2017有书与读书 / 2018水课与好课 / 2019坚持与放弃 / 2020拖延与执行力 / 2022专业与通识",
+      keywords: "<strong>核心上位词：</strong>self-discipline (自律), perseverance (坚持), pragmatism (务实), critical thinking (批判性思维), resist distractions / temptation (抵制诱惑), long-term vision (长远视野), comprehensive competence (综合素养)。<br><strong>破局逻辑：</strong>无论遇到拖延、追星还是选课，统统归结为“自律战胜惰性、长远规划战胜短期诱惑”。"
+    },
+    {
+      title: "母题 2：网络科技、数字生活与时代双刃剑",
+      years: "真题覆盖：2009网络远近 / 2015低头族聚会 / 2024劳动与科技实践 / 2026养老陪伴机器人",
+      keywords: "<strong>核心上位词：</strong>technological empowerment (科技赋能), double-edged sword (双刃剑), excessive indulgence (过度沉溺), virtual isolation (虚拟隔阂), alienation (异化), human-centered innovation (以人为本的创新)。<br><strong>破局逻辑：</strong>正向肯定科技带来 convenience & efficiency；反向警惕 reckless reliance (盲目依赖) 与 erode genuine companionship (侵蚀陪伴)。"
+    },
+    {
+      title: "母题 3：亲情伦理、尊老爱幼与传统美德",
+      years: "真题覆盖：2005足球养老赛 / 2014母女相携看风景 / 2021善意与自省 / 2023乡村龙舟赛 / 2026陪伴机器人",
+      keywords: "<strong>核心上位词：</strong>filial piety (孝顺/孝道), mutual companionship (相互陪伴), emotional resonance (情感共鸣), cultural heritage (文化传承), spiritual nourishment (精神滋养), renew vitality (重焕生机)。<br><strong>破局逻辑：</strong>把具体敬老或文化活动升华到“精神反哺、铸牢亲情纽带与延续文化根脉”。"
+    },
+    {
+      title: "母题 4：社会治理、公共福祉与协同推进",
+      years: "真题覆盖：2008酸雨环保 / 2010手机普及 / 2011轿车文明 / 2023居民健康素养 / 2024就业与劳动观念",
+      keywords: "<strong>核心上位词：</strong>joint / concerted efforts (协同合力), high on the agenda (置于优先议程), sustainable development (可持续发展), public awareness (公众意识), down-to-earth strategy (切实可行策略)。<br><strong>破局逻辑：</strong>第三段措施必走“政府有关部门出台法规 + 公众/个人转变观念践行”双轨推进制！"
+    }
+  ];
+
+  const EXAM_FATAL_MISTAKES = [
+    {
+      title: "雷区一：小作文 NOTICE 误写 Dear 称呼或 Yours sincerely 落款",
+      penalty: "直接扣 2–3 分 (格式一票否决)",
+      wrong: "Dear All, / Dear Students, ... Yours sincerely, Li Ming",
+      right: "首行大写居中 NOTICE，次行靠右写日期 May 15；正文后靠右写官方署名 The Students' Union。"
+    },
+    {
+      title: "雷区二：书信称呼与标点格式错乱",
+      penalty: "扣 1–2 分 (规范分扣减)",
+      wrong: "Dear Professor Smith (漏逗号) / Dear Sir, 却落款 Yours sincerely (称呼未知需配 faithfully)",
+      right: "Dear Professor Smith, 配 Yours sincerely, / Dear Sir or Madam, 配 Yours faithfully, （称呼后必须有英文逗号！）"
+    },
+    {
+      title: "雷区三：图画/图表大作文第一段时态混乱",
+      penalty: "扣 2 分 (语法与语境一致性)",
+      wrong: "The cartoon depicted a scene where people were looking... (大作文首段不能全用过去时)",
+      right: "描绘漫画/图表自身统一用一般现在时：The cartoon presents... / A student is standing... / The chart shows... 仅在图表中出现具体历史年份时，数值变化用过去时（climbed, dropped）。"
+    },
+    {
+      title: "雷区四：图表作文报菜名式流水账，无极值与分词升华",
+      penalty: "扣 3–5 分 (阅卷人最厌烦)",
+      wrong: "Category A is 20%, B is 30%, C is 15%, D is 25%, and E is 10%.",
+      right: "分类聚类：Top 2 极值领跑（...accounting for 58% and 25% respectively, far outpacing the others）+ 长尾低位一句打包（While the remaining categories remain clustered at a low tier, none of which exceeds 10%）。"
+    },
+    {
+      title: "雷区五：大作文第二段无灵主语缺失，通篇“I think / We should”",
+      penalty: "扣 2–4 分 (死锁在及格档)",
+      wrong: "I think computers are good. We can use them to study and we can also play games.",
+      right: "无灵主语+强动词：Excessive indulgence in cyberspace delivers a severe blow to students' academic efficiency, eroding their capacity for sustained concentration."
+    }
+  ];
+
+  // Full Exam Essay Showcase Data (from PDF p. 61-74)
+  const EXAM_SHOWCASE_DATA = [
+    {
+      id: "essay-2020-en1-b",
+      type: "partB",
+      exam: "en1",
+      year: "2020",
+      title: "2020年 英语一 Part B 图画真题：工作习惯与执行力 (Habits & Procrastination)",
+      scoreTag: "大纲一档 18–19分",
+      prompt: "Directions: Write an essay of 160-200 words based on the picture below. (图一女员工'习惯尽早完成'，图二男员工'拖到最后一刻'，下方文字：习惯)",
+      content: `The two images illustrate two distinctly different approaches to work. In the first image, a woman is diligently engaged at her desk, accompanied by the speech bubble stating, "I can only feel at ease when I finish early." In stark contrast, the man in the second image is lounging comfortably, declaring, "I don't start work until the last minute." The common theme highlighted below these illustrations is "habits."
+
+At a fundamental level, productive habits significantly boost efficiency. Individuals who act promptly can manage their time more effectively and approach tasks in organized stages. Conversely, habitual procrastinators often find themselves rushing through their work, leading to subpar results. Moreover, acting without unnecessary delay fosters self-discipline, as repeated actions allow individuals to resist distractions and laziness. Even more importantly, the cumulative impact of these habits cannot be overstated. A single responsible decision may seem insignificant, yet a series of such choices cultivates competence, reliability, and confidence—qualities essential for achieving long-term success.
+
+In conclusion, true and meaningful success rarely stems from sporadic bursts of enthusiasm; it is built through consistent, disciplined actions over time. Therefore, it is crucial to plan ahead, act decisively, and ensure that important tasks do not escalate to last-minute urgencies. Only by making constructive behaviors a part of our routine can our intentions translate into significant progress, and our potential into enduring accomplishments.`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="这两幅图描绘了两种截然不同的工作方式。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The two images illustrate two distinctly different approaches to work.</span></span> <span class="essay-sentence" data-cn="在第一幅图中，一位女性正在办公桌前勤奋工作，旁边的气泡文字写道：“我习惯早做完心里踏实。”"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In the first image, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">a woman is diligently engaged at her desk, accompanied by the speech bubble stating, "I can only feel at ease when I finish early."</span></span> <span class="essay-sentence" data-cn="形成鲜明对比的是，第二幅图中的男性惬意地斜靠着，宣称：“不到最后我不做。”"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In stark contrast, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the man in the second image is lounging comfortably, declaring, "I don't start work until the last minute."</span></span> <span class="essay-sentence" data-cn="这两幅插图下方共同突出的主题是“习惯”。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The common theme highlighted below these illustrations is </span><span class="tpl-slot" title="高分题眼填充/核心亮点">"habits."</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="从根本层面来看，高产的习惯能显著提升效率。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">At a fundamental level, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">productive habits significantly boost efficiency.</span></span> <span class="essay-sentence" data-cn="行动果断的人能够更有效地管理时间，并按部就班地分阶段推进任务。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Individuals who </span><span class="tpl-slot" title="高分题眼填充/核心亮点">act promptly can manage their time more effectively and approach tasks in organized stages.</span></span> <span class="essay-sentence" data-cn="相反，习惯性拖延者往往发现自己不得不在赶工中仓促应付，导致产出差强人意。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Conversely, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">habitual procrastinators often find themselves rushing through their work, leading to subpar results.</span></span> <span class="essay-sentence" data-cn="此外，毫不拖延地采取行动能培养自律精神，因为重复的行为使人们能够抵御诱惑与惰性。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Moreover, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">acting without unnecessary delay fosters self-discipline, as repeated actions allow individuals to resist distractions and laziness.</span></span> <span class="essay-sentence" data-cn="更为重要的是，这些习惯的累积效应不容小觑。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Even more importantly, the cumulative impact of these habits cannot be overstated.</span></span> <span class="essay-sentence" data-cn="一个负责任的决定看似微不足道，但一系列这样的抉择将逐步铸就能力、可靠性与自信心——而这些正是取得长远成功的立身之本。"><span class="tpl-slot" title="高分题眼填充/核心亮点">A single responsible decision may seem insignificant, yet a series of such choices cultivates competence, reliability, and confidence—qualities essential for achieving long-term success.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="总而言之，真正且有价值的成功极少源于偶发的狂热激情，而是随着时间的推移，通过持之以恒、高度自律的行动构筑而成。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In conclusion, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">true and meaningful success rarely stems from sporadic bursts of enthusiasm; it is built through consistent, disciplined actions over time.</span></span> <span class="essay-sentence" data-cn="因此，至关重要的是提前规划、果断行动，并确保关键任务不会演变成最后一刻的紧急危机。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Therefore, it is crucial to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">plan ahead, act decisively, and ensure that important tasks do not escalate to last-minute urgencies.</span></span> <span class="essay-sentence" data-cn="唯有将建设性的行为融入日常生活，我们的初衷才能转化为实质性的进步，潜能也才能蜕变为持久的成就。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Only by </span><span class="tpl-slot" title="高分题眼填充/核心亮点">making constructive behaviors a part of our routine</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> can </span><span class="tpl-slot" title="高分题眼填充/核心亮点">our intentions translate into significant progress, and our potential into enduring accomplishments.</span></span> </p>`,
+      templateMapping: "【母版一：对比双图首段】In the first image... In stark contrast, the man in the second image... + 【母版二：正向自律轨】At a fundamental level, productive habits boost efficiency... resist distractions + 【母版三：展望收官】In conclusion... Only by making... can...",
+      chineseTranslation: `这两幅图描绘了两种截然不同的工作方式。在第一幅图中，一位女性正在办公桌前勤奋工作，旁边的气泡文字写道：“我习惯早做完心里踏实。”形成鲜明对比的是，第二幅图中的男性惬意地斜靠着，宣称：“不到最后我不做。”这两幅插图下方共同突出的主题是“习惯”。
+
+从根本层面来看，高产的习惯能显著提升效率。行动果断的人能够更有效地管理时间，并按部就班地分阶段推进任务。相反，习惯性拖延者往往发现自己不得不在赶工中仓促应付，导致产出差强人意。此外，毫不拖延地采取行动能培养自律精神，因为重复的行为使人们能够抵御诱惑与惰性。更为重要的是，这些习惯的累积效应不容小觑。一个负责任的决定看似微不足道，但一系列这样的抉择将逐步铸就能力、可靠性与自信心——而这些正是取得长远成功的立身之本。
+
+总而言之，真正且有价值的成功极少源于偶发的狂热激情，而是随着时间的推移，通过持之以恒、高度自律的行动构筑而成。因此，至关重要的是提前规划、果断行动，并确保关键任务不会演变成最后一刻的紧急危机。唯有将建设性的行为融入日常生活，我们的初衷才能转化为实质性的进步，潜能也才能蜕变为持久的成就。`,
+      chineseTranslation: `这两幅图描绘了两种截然不同的工作方式。在第一幅图中，一位女性正在办公桌前勤奋工作，旁边的气泡文字写道：“我习惯早做完心里踏实。”形成鲜明对比的是，第二幅图中的男性惬意地斜靠着，宣称：“不到最后我不做。”这两幅插图下方共同突出的主题是“习惯”。
+
+从根本层面来看，高产的习惯能显著提升效率。行动果断的人能够更有效地管理时间，并按部就班地分阶段推进任务。相反，习惯性拖延者往往发现自己不得不在赶工中仓促应付，导致产出差强人意。此外，毫不拖延地采取行动能培养自律精神，因为重复的行为使人们能够抵御诱惑与惰性。更为重要的是，这些习惯的累积效应不容小觑。一个负责任的决定看似微不足道，但一系列这样的抉择将逐步铸就能力、可靠性与自信心——而这些正是取得长远成功的立身之本。
+
+总而言之，真正且有价值的成功极少源于偶发的狂热激情，而是随着时间的推移，通过持之以恒、高度自律的行动构筑而成。因此，至关重要的是提前规划、果断行动，并确保关键任务不会演变成最后一刻的紧急危机。唯有将建设性的行为融入日常生活，我们的初衷才能转化为实质性的进步，潜能也才能蜕变为持久的成就。`,
+      rubricFeedback: "【TA 任务完成】完全抓住'习惯与拖延'核心矛盾；【CC 连贯性】Conversely, Moreover, Even more importantly 层层递进；【LR 词汇】使用 subpar results, sporadic bursts, cultivate competence 等学术强动词；【GRA 语法】尾句使用 Only by 倒装句，语法丰富度极高。"
+    },
+    {
+      id: "essay-2026-en2-b",
+      type: "partB",
+      exam: "en2",
+      year: "2026",
+      title: "2026年 英语二 Part B 图表大作文：儿童户外活动益处调查",
+      scoreTag: "大纲一档 14–15分",
+      prompt: "Directions: Write an essay based on the bar chart showing people's views on children's outdoor activities. (满足好奇心54%，提升观察力54%，强身健体37%，亲子互动33%)",
+      content: `The bar chart illustrates a survey on people's views about children's outdoor activities. As shown, the two most frequently mentioned benefits are satisfying children's curiosity and improving observation, each accounting for about 54 percent. By comparison, strengthening the body takes up about 37 percent, while enhancing parent-child interaction is chosen by roughly one third of respondents.
+
+These figures suggest that outdoor activities are valued not merely as exercise, but as a form of real-world education. In parks, fields or communities, children can touch natural objects, notice changes in weather and plants, and raise questions that rarely arise in classrooms. Such experience connects knowledge with life and builds a habit of careful observation. Meanwhile, the lower percentages for fitness and family interaction do not mean they are unimportant; rather, many parents may still underestimate the emotional value of outdoor companionship.
+
+In my view, families and schools should provide children with safer and more regular outdoor opportunities. Only when children step out of screens and textbooks can they become healthier, more curious and more perceptive.`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="该柱状图展示了一项关于大众对儿童户外活动益处看法的调研。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The bar chart illustrates a survey on </span><span class="tpl-slot" title="高分题眼填充/核心亮点">people's views about children's outdoor activities.</span></span> <span class="essay-sentence" data-cn="如图所示，被提及频率最高的两项益处是“满足儿童的好奇心”和“提升观察力”，各自占比约 54%。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">As shown, the two most frequently mentioned benefits are </span><span class="tpl-slot" title="高分题眼填充/核心亮点">satisfying children's curiosity and improving observation,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> each accounting for </span><span class="tpl-slot" title="高分题眼填充/核心亮点">about 54 percent.</span></span> <span class="essay-sentence" data-cn="相比之下，“强身健体”占比约 37%，而“增进亲子互动”则被约三分之一的受访者选中。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">By comparison, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">strengthening the body takes up about 37 percent,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> while </span><span class="tpl-slot" title="高分题眼填充/核心亮点">enhancing parent-child interaction is chosen by roughly one third of respondents.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="这些数据表明，户外活动的价值已不仅仅被视为体育锻炼，更被看作一种真实的现世教育。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">These figures suggest that </span><span class="tpl-slot" title="高分题眼填充/核心亮点">outdoor activities are valued not merely as exercise, but as a form of real-world education.</span></span> <span class="essay-sentence" data-cn="在公园、田野或社区中，孩子们可以亲手触摸自然物体，感知气候与植被的变化，并提出在课堂上鲜少萌生的问题。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In </span><span class="tpl-slot" title="高分题眼填充/核心亮点">parks, fields or communities,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> children can </span><span class="tpl-slot" title="高分题眼填充/核心亮点">touch natural objects, notice changes in weather and plants, and raise questions that rarely arise in classrooms.</span></span> <span class="essay-sentence" data-cn="这种体验将书本知识与现实生活紧密相连，并培养出细致观察的习惯。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Such experience connects </span><span class="tpl-slot" title="高分题眼填充/核心亮点">knowledge with life and builds a habit of careful observation.</span></span> <span class="essay-sentence" data-cn="同时，强身健体与家庭互动相对偏低的比例并不意味着它们无足轻重，反倒说明许多家长可能仍低估了户外陪伴的情感价值。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Meanwhile, the lower percentages for fitness and family interaction do not mean they are unimportant; rather, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">many parents may still underestimate the emotional value of outdoor companionship.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="在我看来，家庭和学校应当为孩子们提供更多安全且常态化的户外实践机会。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In my view, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">families and schools should provide children with safer and more regular outdoor opportunities.</span></span> <span class="essay-sentence" data-cn="唯有当孩子们走出电子屏幕与课本束缚时，他们才能变得更加健康、更具好奇心且更富敏锐洞察力。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Only when </span><span class="tpl-slot" title="高分题眼填充/核心亮点">children step out of screens and textbooks</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> can they </span><span class="tpl-slot" title="高分题眼填充/核心亮点">become healthier, more curious and more perceptive.</span></span> </p>`,
+      templateMapping: "【动态/静态图表母版首段】The bar chart illustrates... Top 2 极值领跑（accounting for about 54% each）+ 中段【启迪阐释轨】These figures suggest that... + 尾段【双主体倡议】In my view, families and schools should... Only when...",
+      chineseTranslation: `该柱状图展示了一项关于大众对儿童户外活动益处看法的调研。如图所示，被提及频率最高的两项益处是“满足儿童的好奇心”和“提升观察力”，各自占比约 54%。相比之下，“强身健体”占比约 37%，而“增进亲子互动”则被约三分之一的受访者选中。
+
+这些数据表明，户外活动的价值已不仅仅被视为体育锻炼，更被看作一种真实的现世教育。在公园、田野或社区中，孩子们可以亲手触摸自然物体，感知气候与植被的变化，并提出在课堂上鲜少萌生的问题。这种体验将书本知识与现实生活紧密相连，并培养出细致观察的习惯。同时，强身健体与家庭互动相对偏低的比例并不意味着它们无足轻重，反倒说明许多家长可能仍低估了户外陪伴的情感价值。
+
+在我看来，家庭和学校应当为孩子们提供更多安全且常态化的户外实践机会。唯有当孩子们走出电子屏幕与课本束缚时，他们才能变得更加健康、更具好奇心且更富敏锐洞察力。`,
+      chineseTranslation: `该柱状图展示了一项关于大众对儿童户外活动益处看法的调研。如图所示，被提及频率最高的两项益处是“满足儿童的好奇心”和“提升观察力”，各自占比约 54%。相比之下，“强身健体”占比约 37%，而“增进亲子互动”则被约三分之一的受访者选中。
+
+这些数据表明，户外活动的价值已不仅仅被视为体育锻炼，更被看作一种真实的现世教育。在公园、田野或社区中，孩子们可以亲手触摸自然物体，感知气候与植被的变化，并提出在课堂上鲜少萌生的问题。这种体验将书本知识与现实生活紧密相连，并培养出细致观察的习惯。同时，强身健体与家庭互动相对偏低的比例并不意味着它们无足轻重，反倒说明许多家长可能仍低估了户外陪伴的情感价值。
+
+在我看来，家庭和学校应当为孩子们提供更多安全且常态化的户外实践机会。唯有当孩子们走出电子屏幕与课本束缚时，他们才能变得更加健康、更具好奇心且更富敏锐洞察力。`,
+      rubricFeedback: "【TA 任务完成】数据提炼规范，未报菜名；【CC 连贯性】not merely... but as...，Meanwhile, rather 逻辑紧密；【LR 词汇】real-world education, emotional value of companionship；【GRA 句式】尾句使用 Only when 倒装句收官。"
+    },
+    {
+      id: "essay-2026-en1-chart-b",
+      type: "partB",
+      exam: "en1",
+      year: "2026",
+      title: "2026年 英语一 Part B 图表大作文：老龄化背景下养老陪伴机器人调研 (仅英一)",
+      scoreTag: "大纲一档 18–19分 (仅英语一)",
+      prompt: "Directions: Write an essay based on two charts: 饼图（72.1%接受度，27.9%拒绝）与柱图（安全顾虑46.3%，价格25%，便利性10%）。",
+      content: `Against the backdrop of population aging and rapid technological advancement, elderly-care robots have become a topic of growing public concern. Two charts present consumers' acceptance of such robots and their primary concerns. The pie chart shows that 72.1% of respondents express at least partial acceptance, if not complete acceptance, whereas the remaining 27.9% convey outright rejection. According to the bar chart, safety is regarded as a dominant concern, accounting for 46.3%, followed by price and convenience, which share a notable proportion of approximately 25% and roughly 10% respectively.
+
+The statistics suggest the ambivalence of consumers. On the one hand, thanks to technological advances, robots cross the threshold into ordinary households and assist with daily care. Besides, the shortage of caregiving resources in an aging society has made robotic assistance a practical supplement to human care. On the other hand, obstacles remain before widespread acceptance can be achieved. Not only does elderly-care robotics still have several limitations per se, but people's instinctive distrust of unfamiliar technologies continues to undermine confidence in robotic care.
+
+To generalise, as every coin has two sides, acceptance is growing, but skepticism persists. Therefore, companies should improve both user experience and affordability through sustained technological innovation. Only when robots are reliable, accessible and human-centered can a promising future unfold for the elderly-care robotics sector.`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="在人口老龄化与科技飞速发展的宏观背景下，养老陪伴机器人已成为日益受到公众关注的热点议题。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Against the backdrop of </span><span class="tpl-slot" title="高分题眼填充/核心亮点">population aging and rapid technological advancement,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> </span><span class="tpl-slot" title="高分题眼填充/核心亮点">elderly-care robots</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> have become a topic of growing public concern.</span></span> <span class="essay-sentence" data-cn="两幅图表分别呈现了消费者对该类机器人的接受程度及其核心顾虑。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Two charts present </span><span class="tpl-slot" title="高分题眼填充/核心亮点">consumers' acceptance of such robots and their primary concerns.</span></span> <span class="essay-sentence" data-cn="饼图显示，72.1% 的受访者表示至少部分接受（乃至完全接受），而剩余 27.9% 则表示明确拒绝。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The pie chart shows that </span><span class="tpl-slot" title="高分题眼填充/核心亮点">72.1% of respondents express at least partial acceptance, if not complete acceptance,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> whereas the remaining </span><span class="tpl-slot" title="高分题眼填充/核心亮点">27.9% convey outright rejection.</span></span> <span class="essay-sentence" data-cn="根据柱状图，安全性被视为主导顾虑，占比达 46.3%，其次是价格与便利性，分别占到约 25% 和约 10% 的可观比例。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">According to the bar chart, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">safety is regarded as a dominant concern, accounting for 46.3%, followed by price and convenience, which share a notable proportion of approximately 25% and roughly 10% respectively.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="这些统计数据折射出消费者的矛盾复杂心理。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The statistics suggest </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the ambivalence of consumers.</span></span> <span class="essay-sentence" data-cn="一方面，得益于技术进步，机器人得以跨入寻常百姓家并协助日常照料。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">On the one hand, thanks to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">technological advances, robots cross the threshold into ordinary households and assist with daily care.</span></span> <span class="essay-sentence" data-cn="此外，老龄化社会中照护资源的匮乏，使得机器人辅助成为了人工照料切实可行的有力补充。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Besides, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the shortage of caregiving resources in an aging society has made robotic assistance a practical supplement to human care.</span></span> <span class="essay-sentence" data-cn="另一方面，在实现广泛普及之前依然存在诸多阻碍。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">On the other hand, obstacles remain before widespread acceptance can be achieved.</span></span> <span class="essay-sentence" data-cn="不仅养老机器人技术本身仍存在若干局限，而且人们对未知陌生技术的本能不信任感，也在持续削弱对机器照料的信心。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Not only does </span><span class="tpl-slot" title="高分题眼填充/核心亮点">elderly-care robotics still have several limitations per se,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> but </span><span class="tpl-slot" title="高分题眼填充/核心亮点">people's instinctive distrust of unfamiliar technologies continues to undermine confidence in robotic care.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="概括而言，正如一枚硬币皆有两面，公众的接纳度在不断上升，但疑虑与观望亦然并存。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">To generalise, as every coin has two sides, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">acceptance is growing, but skepticism persists.</span></span> <span class="essay-sentence" data-cn="因此，企业应通过持续的技术创新，同步提升用户体验与价格亲民度。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Therefore, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">companies should improve both user experience and affordability through sustained technological innovation.</span></span> <span class="essay-sentence" data-cn="唯有当机器人真正做到安全可靠、经济普惠且以人为本时，养老机器人产业才能迎来光明璀璨的发展前景。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Only when </span><span class="tpl-slot" title="高分题眼填充/核心亮点">robots are reliable, accessible and human-centered</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> can </span><span class="tpl-slot" title="高分题眼填充/核心亮点">a promising future unfold for the elderly-care robotics sector.</span></span> </p>`,
+      templateMapping: "【双图表首段母版】Against the backdrop of... Two charts present... + 【二段辩证反思轨】suggest the ambivalence... On the one hand... On the other hand... Not only does... but... + 【三段企业对策】To generalise... Only when... can...",
+      chineseTranslation: `在人口老龄化与科技飞速发展的宏观背景下，养老陪伴机器人已成为日益受到公众关注的热点议题。两幅图表分别呈现了消费者对该类机器人的接受程度及其核心顾虑。饼图显示，72.1% 的受访者表示至少部分接受（乃至完全接受），而剩余 27.9% 则表示明确拒绝。根据柱状图，安全性被视为主导顾虑，占比达 46.3%，其次是价格与便利性，分别占到约 25% 和约 10% 的可观比例。
+
+这些统计数据折射出消费者的矛盾复杂心理。一方面，得益于技术进步，机器人得以跨入寻常百姓家并协助日常照料。此外，老龄化社会中照护资源的匮乏，使得机器人辅助成为了人工照料切实可行的有力补充。另一方面，在实现广泛普及之前依然存在诸多阻碍。不仅养老机器人技术本身仍存在若干局限，而且人们对未知陌生技术的本能不信任感，也在持续削弱对机器照料的信心。
+
+概括而言，正如一枚硬币皆有两面，公众的接纳度在不断上升，但疑虑与观望亦然并存。因此，企业应通过持续的技术创新，同步提升用户体验与价格亲民度。唯有当机器人真正做到安全可靠、经济普惠且以人为本时，养老机器人产业才能迎来光明璀璨的发展前景。`,
+      chineseTranslation: `在人口老龄化与科技飞速发展的宏观背景下，养老陪伴机器人已成为日益受到公众关注的热点议题。两幅图表分别呈现了消费者对该类机器人的接受程度及其核心顾虑。饼图显示，72.1% 的受访者表示至少部分接受（乃至完全接受），而剩余 27.9% 则表示明确拒绝。根据柱状图，安全性被视为主导顾虑，占比达 46.3%，其次是价格与便利性，分别占到约 25% 和约 10% 的可观比例。
+
+这些统计数据折射出消费者的矛盾复杂心理。一方面，得益于技术进步，机器人得以跨入寻常百姓家并协助日常照料。此外，老龄化社会中照护资源的匮乏，使得机器人辅助成为了人工照料切实可行的有力补充。另一方面，在实现广泛普及之前依然存在诸多阻碍。不仅养老机器人技术本身仍存在若干局限，而且人们对未知陌生技术的本能不信任感，也在持续削弱对机器照料的信心。
+
+概括而言，正如一枚硬币皆有两面，公众的接纳度在不断上升，但疑虑与观望亦然并存。因此，企业应通过持续的技术创新，同步提升用户体验与价格亲民度。唯有当机器人真正做到安全可靠、经济普惠且以人为本时，养老机器人产业才能迎来光明璀璨的发展前景。`,
+      rubricFeedback: "【TA 任务完成】完美融合两张图表，提炼消费者矛盾心理（ambivalence）；【CC 连贯性】On the one hand / On the other hand 对仗工整；【LR 词汇】cross the threshold, practical supplement, human-centered；【GRA 句式】二段 Not only 倒装，三段 Only when 倒装。"
+    },
+    {
+      id: "essay-2024-en2-b",
+      type: "partB",
+      exam: "en2",
+      year: "2024",
+      title: "2024年 英语二 Part B 图表大作文：大学劳动实践课收获调查",
+      scoreTag: "大纲一档 14分",
+      prompt: "Directions: Write an essay based on the bar chart on students' primary benefits from a labor-practice class (知识与技能>84%，趣味性54.5%，合作技能<33%).",
+      content: `The bar chart presents a survey regarding students' primary benefits derived from a labor-practice class at a university. The data reveals that the two most frequently cited advantages are the acquisition of relevant knowledge and the enhancement of practical skills, accounting for 84.5% and 91.3% of responses, respectively. In contrast, the enjoyment factor represents a mere 54.5%. Additionally, the improvement of cooperation skills is acknowledged by less than one-third of the respondents.
+
+These statistics indicate that while the labor-practice class meets its fundamental objectives, it falls short in helping students grasp the deeper significance of labor practices. On one hand, it is evident that students acquire substantial knowledge and actively participate in practical exercises. On the other hand, it is unfortunate that many tend to complete tasks individually, often leaving with a negative mindset. This suggests that the class does not foster teamwork or allow students to experience the joy associated with labor.
+
+In my opinion, it is challenging to deem this class a successful one. Even if it is regarded as effective, it does not stand out from similar courses. The university should prioritize enhancing its core mission—immersing students in the spirit of labor and cultivating teamwork skills.`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="该柱状图展示了一项关于某大学学生在劳动实践课中主要收获的调查。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The bar chart presents a survey regarding </span><span class="tpl-slot" title="高分题眼填充/核心亮点">students' primary benefits derived from a labor-practice class at a university.</span></span> <span class="essay-sentence" data-cn="数据显示，被提及最多的两项益处是“获取相关知识”与“提升实践技能”，在回复中分别占到 84.5% 和 91.3%。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The data reveals that the two most frequently cited advantages are </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the acquisition of relevant knowledge and the enhancement of practical skills, accounting for 84.5% and 91.3% of responses, respectively.</span></span> <span class="essay-sentence" data-cn="相比之下，“趣味性/享受乐趣”仅占 54.5%。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In contrast, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the enjoyment factor represents a mere 54.5%.</span></span> <span class="essay-sentence" data-cn="此外，“协作技能的提升”得到认可的比例不足三分之一。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Additionally, </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the improvement of cooperation skills is acknowledged by less than one-third of the respondents.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="这些数据表明，尽管该劳动实践课达成了基础教学目标，但在引导学生领会劳动实践的深层内涵方面仍有欠缺。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">These statistics indicate that while </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the labor-practice class meets its fundamental objectives,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> it falls short in </span><span class="tpl-slot" title="高分题眼填充/核心亮点">helping students grasp the deeper significance of labor practices.</span></span> <span class="essay-sentence" data-cn="一方面，显而易见的是学生们确实掌握了大量知识并积极参与了实操训练。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">On one hand, it is evident that </span><span class="tpl-slot" title="高分题眼填充/核心亮点">students acquire substantial knowledge and actively participate in practical exercises.</span></span> <span class="essay-sentence" data-cn="但另一方面，令人遗憾的是许多人倾向于各自单打独斗完成任务，往往带着消极被动的心态结课。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">On the other hand, it is unfortunate that </span><span class="tpl-slot" title="高分题眼填充/核心亮点">many tend to complete tasks individually, often leaving with a negative mindset.</span></span> <span class="essay-sentence" data-cn="这说明该课程未能充分培养团队合作精神，也未能让学生切身体会到劳动所带来的喜悦。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">This suggests that </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the class does not foster teamwork or allow students to experience the joy associated with labor.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="在我看来，很难将这门课定性为一门完全成功的课程。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">In my opinion, it is challenging to deem this class a successful one.</span></span> <span class="essay-sentence" data-cn="即使被认为有一定成效，它在同类课程中也并不突出。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Even if it is regarded as effective, it does not stand out from similar courses.</span></span> <span class="essay-sentence" data-cn="大学应当优先强化其核心育人使命——让学生真正沉浸于劳动精神之中，并深层次塑造团队协作技能。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The university should prioritize enhancing its core mission—</span><span class="tpl-slot" title="高分题眼填充/核心亮点">immersing students in the spirit of labor and cultivating teamwork skills.</span></span> </p>`,
+      templateMapping: "【图表极值对比首段】The bar chart presents... The data reveals that the two most frequently cited advantages are... In contrast... + 【二段深层反思】falls short in... On one hand... On the other hand... + 【三段学校改进对策】The university should prioritize enhancing its core mission...",
+      chineseTranslation: `该柱状图展示了一项关于某大学学生在劳动实践课中主要收获的调查。数据显示，被提及最多的两项益处是“获取相关知识”与“提升实践技能”，在回复中分别占到 84.5% 和 91.3%。相比之下，“趣味性/享受乐趣”仅占 54.5%。此外，“协作技能的提升”得到认可的比例不足三分之一。
+
+这些数据表明，尽管该劳动实践课达成了基础教学目标，但在引导学生领会劳动实践的深层内涵方面仍有欠缺。一方面，显而易见的是学生们确实掌握了大量知识并积极参与了实操训练；但另一方面，令人遗憾的是许多人倾向于各自单打独斗完成任务，往往带着消极被动的心态结课。这说明该课程未能充分培养团队合作精神，也未能让学生切身体会到劳动所带来的喜悦。
+
+在我看来，很难将这门课定性为一门完全成功的课程。即使被认为有一定成效，它在同类课程中也并不突出。大学应当优先强化其核心育人使命——让学生真正沉浸于劳动精神之中，并深层次塑造团队协作技能。`,
+      chineseTranslation: `该柱状图展示了一项关于某大学学生在劳动实践课中主要收获的调查。数据显示，被提及最多的两项益处是“获取相关知识”与“提升实践技能”，在回复中分别占到 84.5% 和 91.3%。相比之下，“趣味性/享受乐趣”仅占 54.5%。此外，“协作技能的提升”得到认可的比例不足三分之一。
+
+这些数据表明，尽管该劳动实践课达成了基础教学目标，但在引导学生领会劳动实践的深层内涵方面仍有欠缺。一方面，显而易见的是学生们确实掌握了大量知识并积极参与了实操训练；但另一方面，令人遗憾的是许多人倾向于各自单打独斗完成任务，往往带着消极被动的心态结课。这说明该课程未能充分培养团队合作精神，也未能让学生切身体会到劳动所带来的喜悦。
+
+在我看来，很难将这门课定性为一门完全成功的课程。即使被认为有一定成效，它在同类课程中也并不突出。大学应当优先强化其核心育人使命——让学生真正沉浸于劳动精神之中，并深层次塑造团队协作技能。`,
+      rubricFeedback: "【TA 任务完成】不仅描述了比例，而且指出'形式达标但欠缺团队合作与劳动精神'；【CC 连贯性】while... On one hand... On the other hand...；【LR 词汇】acquisition of knowledge, falls short in, immerse students in；【GRA 句式】破折号同位语解释，Even if 让步句。"
+    },
+    {
+      id: "essay-2025-en2-b",
+      type: "partB",
+      exam: "en2",
+      year: "2025",
+      title: "2025年 英语二 Part B 图表大作文：社区老年人休闲活动调查 (扇贝实测14分)",
+      scoreTag: "大纲一档 14分 (权威实测)",
+      prompt: "Directions: Write an essay based on the bar chart on the primary leisure activities of the elderly (看电视90.8%，散步68.3%，园艺/读书/下棋均<35%).",
+      content: `The bar chart illustrates the primary leisure activities of the elderly in a community. The participation rate highlights the prevalence of watching TV and walking, accounting for 90.8% and 68.3% respectively. While other activities, involving gardening, reading and playing chess, are overshadowed in comparison, none of which exceeds 35%. Succinct as it is, the chart conveys abundant enlightenments, and below are my perspectives.
+
+For one thing, what first comes into view, without any doubt, is the remarkable diversity of leisure. Stemming from the immense progress in living conditions, the elderly enjoy increasing opportunities to cultivate their hobbies and entertain themselves. For another, there still remain potential concerns indicated in the chart. The disproportionate preference for hobbies requiring less cognitive effort serves as an implication that humanistic care for the elderly may fall behind. As a prescription, it is imperative for both the government and the community to prioritize spiritual care over material support.
+
+Every little endeavor counts to enhance the quality of life for elderly citizens. As college students, we bear the responsibility to accompany our grandparents, and take more participation in volunteer work. With joint efforts, we will create an environment where seniors feel motivated and valued.`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="该柱状图展示了某社区老年人的主要闲暇活动。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The bar chart illustrates </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the primary leisure activities of the elderly in a community.</span></span> <span class="essay-sentence" data-cn="参与率凸显了“看电视”与“散步”的普遍性，分别高达 90.8% 和 68.3%。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The participation rate highlights the prevalence of </span><span class="tpl-slot" title="高分题眼填充/核心亮点">watching TV and walking, accounting for 90.8% and 68.3% respectively.</span></span> <span class="essay-sentence" data-cn="相比之下，园艺、阅读和下棋等其他活动则显得相形见绌，且无一比例超过 35%。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">While other activities, involving </span><span class="tpl-slot" title="高分题眼填充/核心亮点">gardening, reading and playing chess,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> are overshadowed in comparison, none of which exceeds </span><span class="tpl-slot" title="高分题眼填充/核心亮点">35%.</span></span> <span class="essay-sentence" data-cn="图表虽简练，却蕴含着丰富的启迪，以下是我的观点。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Succinct as it is, the chart conveys abundant enlightenments, and below are my perspectives.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="首先，毫无疑问，映入眼帘的第一点是休闲方式的显著多样化。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">For one thing, what first comes into view, without any doubt, is </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the remarkable diversity of leisure.</span></span> <span class="essay-sentence" data-cn="得益于生活条件的巨大改善，老年人拥有越来越多的机会来培养兴趣爱好、自娱自乐。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Stemming from </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the immense progress in living conditions, the elderly enjoy increasing opportunities to cultivate their hobbies and entertain themselves.</span></span> <span class="essay-sentence" data-cn="然而另一方面，图表中也折射出潜在的隐忧。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">For another, there still remain potential concerns indicated in the chart.</span></span> <span class="essay-sentence" data-cn="老年人过度偏好低认知精力的活动，这暗示着对老年群体的精神人文关怀可能尚显滞后。"><span class="tpl-slot" title="高分题眼填充/核心亮点">The disproportionate preference for hobbies requiring less cognitive effort</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> serves as an implication that </span><span class="tpl-slot" title="高分题眼填充/核心亮点">humanistic care for the elderly may fall behind.</span></span> <span class="essay-sentence" data-cn="作为应对良策，政府与社区必须将精神层面的关爱置于单纯物质支持之上。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">As a prescription, it is imperative for both the government and the community to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">prioritize spiritual care over material support.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="为老年公民提升生活品质，每一份微小的努力都不可或缺。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Every little endeavor counts to enhance the quality of life for </span><span class="tpl-slot" title="高分题眼填充/核心亮点">elderly citizens.</span></span> <span class="essay-sentence" data-cn="作为当代大学生，我们有责任多陪伴祖父母，并积极投身敬老志愿服务。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">As college students, we bear the responsibility to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">accompany our grandparents, and take more participation in volunteer work.</span></span> <span class="essay-sentence" data-cn="凝聚各方合力，我们定能营造一个让长辈倍感鼓舞且深感自身价值的温暖环境。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">With joint efforts, we will create an environment where </span><span class="tpl-slot" title="高分题眼填充/核心亮点">seniors feel motivated and valued.</span></span> </p>`,
+      templateMapping: "【静态图表标准母版】The bar chart illustrates... Top 2（accounting for... respectively）+ 长尾打包（none of which exceeds 35%）+ 让步过渡（Succinct as it is...）+ 【二段双维度论证】For one thing... Stemming from... For another... disproportionate preference... + 【三段官方措施+青年行动】Every little endeavor counts... With joint efforts...",
+      chineseTranslation: `该柱状图展示了某社区老年人的主要闲暇活动。参与率凸显了“看电视”与“散步”的普遍性，分别高达 90.8% 和 68.3%。相比之下，园艺、阅读和下棋等其他活动则显得相形见绌，且无一比例超过 35%。图表虽简练，却蕴含着丰富的启迪，以下是我的观点。
+
+首先，毫无疑问，映入眼帘的第一点是休闲方式的显著多样化。得益于生活条件的巨大改善，老年人拥有越来越多的机会来培养兴趣爱好、自娱自乐。然而另一方面，图表中也折射出潜在的隐忧。老年人过度偏好低认知精力的活动，这暗示着对老年群体的精神人文关怀可能尚显滞后。作为应对良策，政府与社区必须将精神层面的关爱置于单纯物质支持之上。
+
+为老年公民提升生活品质，每一份微小的努力都不可或缺。作为当代大学生，我们有责任多陪伴祖父母，并积极投身敬老志愿服务。凝聚各方合力，我们定能营造一个让长辈倍感鼓舞且深感自身价值的温暖环境。`,
+      chineseTranslation: `该柱状图展示了某社区老年人的主要闲暇活动。参与率凸显了“看电视”与“散步”的普遍性，分别高达 90.8% 和 68.3%。相比之下，园艺、阅读和下棋等其他活动则显得相形见绌，且无一比例超过 35%。图表虽简练，却蕴含着丰富的启迪，以下是我的观点。
+
+首先，毫无疑问，映入眼帘的第一点是休闲方式的显著多样化。得益于生活条件的巨大改善，老年人拥有越来越多的机会来培养兴趣爱好、自娱自乐。然而另一方面，图表中也折射出潜在的隐忧。老年人过度偏好低认知精力的活动，这暗示着对老年群体的精神人文关怀可能尚显滞后。作为应对良策，政府与社区必须将精神层面的关爱置于单纯物质支持之上。
+
+为老年公民提升生活品质，每一份微小的努力都不可或缺。作为当代大学生，我们有责任多陪伴祖父母，并积极投身敬老志愿服务。凝聚各方合力，我们定能营造一个让长辈倍感鼓舞且深感自身价值的温暖环境。`,
+      rubricFeedback: "【TA 任务完成】准确归纳两项低认知精力活动；【CC 连贯性】Succinct as it is 让步过渡极佳；【LR 词汇】overshadowed in comparison, disproportionate preference, humanistic care；【GRA 句式】非限制定从 none of which exceeds, 分词短语 Stemming from 前置。"
+    },
+    {
+      id: "essay-2022-en1-a",
+      type: "partA",
+      exam: "en1",
+      year: "2022",
+      title: "2022年 英语一 Part A 应用文：邀请英国高校教授组队参加国际创新大赛 (扇贝实测9分)",
+      scoreTag: "大纲一档 9分 (权威实测)",
+      prompt: "Directions: Write an email to a professor at a British university, inviting him/her to organize a team for the international innovation contest to be held at your university. (约100词，署名Li Ming)",
+      content: `Dear professor,
+
+words fail to express my excitement to inform you about our approaching innovation contest. It is our honor to invite you to participate in the contest with your team. Below are the details.
+
+The contest, revolving around the theme of inspiring students' creativity, will be held at my university next month. Serving as a high-level platform to encourage campus innovation, it has attracted extraordinary teams from all over the world to sign up. And through engaging in this game, not only do competitors reap a chance to be immersed in the atmosphere of collaboration and competition, but they will also enhance their practical skills in addressing real-world issues. So, given your extensive experience in contests of this kind, it occurs to us first to offer you an invitation.
+
+On behalf of the contest committee, we sincerely anticipate your attendance with your talented team. Looking forward to receiving your early reply.
+
+Yours sincerely,
+Li Ming.`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="尊敬的教授："><span class="tpl-skel" title="母版固定骨架/逻辑框架">Dear professor,</span></span> <span class="essay-sentence" data-cn="欣闻我校即将举办创新大赛，我怀着无比激动的心情向您致信。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">words fail to express my </span><span class="tpl-slot" title="高分题眼填充/核心亮点">excitement</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> to inform you about </span><span class="tpl-slot" title="高分题眼填充/核心亮点">our approaching innovation contest.</span></span> <span class="essay-sentence" data-cn="我们万分荣幸地邀请您与您的团队参赛。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">It is our honor to invite you to participate in </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the contest with your team.</span></span> <span class="essay-sentence" data-cn="具体细节如下："><span class="tpl-skel" title="母版固定骨架/逻辑框架">Below are the details.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="本次大赛围绕“激发学生创造力”为主题，将于下个月在我校举行。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The contest, revolving around the theme of </span><span class="tpl-slot" title="高分题眼填充/核心亮点">inspiring students' creativity,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> will be held at </span><span class="tpl-slot" title="高分题眼填充/核心亮点">my university next month.</span></span> <span class="essay-sentence" data-cn="作为鼓励校园创新的高水平竞技平台，它已吸引了来自全球各地的优秀队伍报名。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Serving as a high-level platform to encourage campus innovation, it has attracted extraordinary teams from all over the world to sign up.</span></span> <span class="essay-sentence" data-cn="通过参与此次竞赛，参赛者不仅有机会沉浸在协作与竞争交融的学术氛围中，更能大幅提高解决现实复杂问题的实践能力。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">And through engaging in this game, not only do competitors reap a chance to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">be immersed in the atmosphere of collaboration and competition,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> but they will also </span><span class="tpl-slot" title="高分题眼填充/核心亮点">enhance their practical skills in addressing real-world issues.</span></span> <span class="essay-sentence" data-cn="鉴于您在同类赛事中拥有极其丰富的指导经验，我们首先想到的便是向您发出诚挚邀请。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">So, given your extensive experience in contests of this kind, it occurs to us first to offer you an invitation.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="我谨代表大赛组委会，衷心期盼您与您的精英团队莅临参赛。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">On behalf of the contest committee, we sincerely anticipate </span><span class="tpl-slot" title="高分题眼填充/核心亮点">your attendance with your talented team.</span></span> <span class="essay-sentence" data-cn="期盼能早日收到您的回复。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Looking forward to receiving your early reply.</span></span> <span class="essay-sentence" data-cn="您真诚的，李明。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Yours sincerely,<br>Li Ming.</span></span> </p>`,
+      templateMapping: "【母版一：事件类万能书信】Dear professor + words fail to express my excitement to inform you about... It is our honor to invite you to... + 【小说六要素中段】主题 (revolving around) + 地点时间 + 收益 (not only do competitors... but also...) + 资质夸夸 (given your extensive experience...) + 【尾段邀请双句】On behalf of the contest committee, we sincerely anticipate... Looking forward to...",
+      chineseTranslation: `尊敬的教授：
+
+欣闻我校即将举办创新大赛，我怀着无比激动的心情向您致信。我们万分荣幸地邀请您与您的团队参赛。具体细节如下：
+
+本次大赛围绕“激发学生创造力”为主题，将于下个月在我校举行。作为鼓励校园创新的高水平竞技平台，它已吸引了来自全球各地的优秀队伍报名。通过参与此次竞赛，参赛者不仅有机会沉浸在协作与竞争交融的学术氛围中，更能大幅提高解决现实复杂问题的实践能力。鉴于您在同类赛事中拥有极其丰富的指导经验，我们首先想到的便是向您发出诚挚邀请。
+
+我谨代表大赛组委会，衷心期盼您与您的精英团队莅临参赛。期盼能早日收到您的回复。
+
+您真诚的，
+李明。`,
+      chineseTranslation: `尊敬的教授：
+
+欣闻我校即将举办创新大赛，我怀着无比激动的心情向您致信。我们万分荣幸地邀请您与您的团队参赛。具体细节如下：
+
+本次大赛围绕“激发学生创造力”为主题，将于下个月在我校举行。作为鼓励校园创新的高水平竞技平台，它已吸引了来自全球各地的优秀队伍报名。通过参与此次竞赛，参赛者不仅有机会沉浸在协作与竞争交融的学术氛围中，更能大幅提高解决现实复杂问题的实践能力。鉴于您在同类赛事中拥有极其丰富的指导经验，我们首先想到的便是向您发出诚挚邀请。
+
+我谨代表大赛组委会，衷心期盼您与您的精英团队莅临参赛。期盼能早日收到您的回复。
+
+您真诚的，
+李明。`,
+      rubricFeedback: "【TA 任务完成】包含所有规定要点（参赛邀请、组队要求、赛事细节）；【CC 连贯性】从赛事背景到邀请原因过渡自然流畅；【LR 词汇】revolving around, immersed in collaboration, extensive experience；【GRA 句式】not only do 倒装句使用极度娴熟。"
+    },
+    {
+      id: "essay-2025-en2-a",
+      type: "partA",
+      exam: "en2",
+      year: "2025",
+      title: "2025年 英语二 Part A 应用文：策划传统短剧并邀请好友加入",
+      scoreTag: "大纲一档 9分",
+      prompt: "Directions: Write an email to your friend John, telling him about a short play based on Journey to the West and inviting him to join as an actor. (约100词，署名Li Ming)",
+      content: `Dear John,
+
+Words fail to express my excitement when I decide to tell you about a short play we are planning.
+
+Based on the classic Chinese novel Journey to the West, it tells the exciting story of the Monkey King and his companions on their journey to obtain Buddhist scriptures. The play is not only entertaining but also helps people appreciate traditional Chinese culture.
+
+Given your strong interest in acting and Chinese culture, it occurs to me first to ask if you are willing to join us. We would be more than delighted if you could play one of the main roles. And I believe your talent will make the performance even more successful.
+
+Looking forward to receiving your reply at your earliest convenience.
+
+Yours,
+Li Ming`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="亲爱的约翰："><span class="tpl-skel" title="母版固定骨架/逻辑框架">Dear John,</span></span> <span class="essay-sentence" data-cn="一想到要告诉你我们正在策划的一部短剧，我便按捺不住内心的兴奋。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Words fail to express my </span><span class="tpl-slot" title="高分题眼填充/核心亮点">excitement</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> when I decide to tell you about </span><span class="tpl-slot" title="高分题眼填充/核心亮点">a short play we are planning.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="该短剧改编自中国古典名著《西游记》，讲述了美猴王及其同伴西天取经的精彩故事。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Based on </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the classic Chinese novel Journey to the West, it tells the exciting story of the Monkey King and his companions on their journey to obtain Buddhist scriptures.</span></span> <span class="essay-sentence" data-cn="这部短剧不仅极具趣味性与观赏性，更有助于人们领略中国传统文化的深厚魅力。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The play is not only </span><span class="tpl-slot" title="高分题眼填充/核心亮点">entertaining</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> but also helps people </span><span class="tpl-slot" title="高分题眼填充/核心亮点">appreciate traditional Chinese culture.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="鉴于你对戏剧表演和中国文化一直怀有浓厚兴趣，我首先便想询问你是否愿意加入我们。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Given your strong interest in </span><span class="tpl-slot" title="高分题眼填充/核心亮点">acting and Chinese culture,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> it occurs to me first to ask if you are willing to join us.</span></span> <span class="essay-sentence" data-cn="如果你能出演其中一个主要角色，我们将无比欣喜。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">We would be more than delighted if you could </span><span class="tpl-slot" title="高分题眼填充/核心亮点">play one of the main roles.</span></span> <span class="essay-sentence" data-cn="我相信你的才华定能让本次演出更加出彩。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">And I believe your talent will make the performance even more successful.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="期待能在你方便时尽早收到你的回复。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Looking forward to receiving your reply at your earliest convenience.</span></span> <span class="essay-sentence" data-cn="你的朋友，李明"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Yours,<br>Li Ming</span></span> </p>`,
+      templateMapping: "【母版一：事件类书信】Dear John + Words fail to express my excitement... + 【六要素中段】起因背景（Based on...）+ 收益价值（not only entertaining but also...）+ 资质邀请（Given your strong interest... it occurs to me first to...）+ 【尾段期待】Looking forward to receiving your reply...",
+      chineseTranslation: `亲爱的约翰：
+
+一想到要告诉你我们正在策划的一部短剧，我便按捺不住内心的兴奋。
+
+该短剧改编自中国古典名著《西游记》，讲述了美猴王及其同伴西天取经的精彩故事。这部短剧不仅极具趣味性与观赏性，更有助于人们领略中国传统文化的深厚魅力。
+
+鉴于你对戏剧表演和中国文化一直怀有浓厚兴趣，我首先便想询问你是否愿意加入我们。如果你能出演其中一个主要角色，我们将无比欣喜。我相信你的才华定能让本次演出更加出彩。
+
+期待能在你方便时尽早收到你的回复。
+
+你的朋友，
+李明`,
+      chineseTranslation: `亲爱的约翰：
+
+一想到要告诉你我们正在策划的一部短剧，我便按捺不住内心的兴奋。
+
+该短剧改编自中国古典名著《西游记》，讲述了美猴王及其同伴西天取经的精彩故事。这部短剧不仅极具趣味性与观赏性，更有助于人们领略中国传统文化的深厚魅力。
+
+鉴于你对戏剧表演和中国文化一直怀有浓厚兴趣，我首先便想询问你是否愿意加入我们。如果你能出演其中一个主要角色，我们将无比欣喜。我相信你的才华定能让本次演出更加出彩。
+
+期待能在你方便时尽早收到你的回复。
+
+你的朋友，
+李明`,
+      rubricFeedback: "【TA 任务完成】要点紧扣短剧背景与角色邀请；【CC 连贯性】行文亲切得体，符合朋友间日常通信风格；【LR 词汇】Buddhist scriptures, appreciate traditional culture；【GRA 句式】Given 分词前置，虚拟条件句 if you could play。"
+    },
+    {
+      id: "essay-2025-en1-a",
+      type: "partA",
+      exam: "en1",
+      year: "2025",
+      title: "2025年 英语一 Part A 应用文：回复外国友人 Paul 询问手工艺展示并请求协助",
+      scoreTag: "大纲一档 9分",
+      prompt: "Directions: Read the email from Paul inquiring about the upcoming craft demonstration and reply, describing the activities and asking for his help with seat arrangements.",
+      content: `Dear Paul,
+
+Words failed to express my delight when I received your email. I am so glad that you are interested in the coming craft-making demonstration. Below are the details.
+
+The young craftsmen will show several innovative works, including paper-cutting combined with modern design, handmade bamboo lamps, and small clay figures inspired by campus life. Serving as a bridge between tradition and creativity, the event will help students appreciate Chinese craftsmanship in a fresh way. As for the preparation work, given that there will be many foreign students participating in this event, could you please help us arrange the seats and guide foreign students to the venue?
+
+Your assistance will surely make the activity smoother. Looking forward to seeing you on campus.
+
+Yours sincerely,
+Li Ming`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="亲爱的保罗："><span class="tpl-skel" title="母版固定骨架/逻辑框架">Dear Paul,</span></span> <span class="essay-sentence" data-cn="收到你的来信，我由衷感到欣喜。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Words failed to express my </span><span class="tpl-slot" title="高分题眼填充/核心亮点">delight</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> when I received your email.</span></span> <span class="essay-sentence" data-cn="得知你对即将举办的手工艺制作展示活动感兴趣，我感到非常高兴。活动细节如下："><span class="tpl-skel" title="母版固定骨架/逻辑框架">I am so glad that you are interested in </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the coming craft-making demonstration.</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> Below are the details.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="青年手工艺人们将展示多项创新作品，包括融合了现代设计的剪纸艺术、手工竹编灯具以及灵感源自校园生活的黏土泥塑小雕像。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">The young craftsmen will show several innovative works, including </span><span class="tpl-slot" title="高分题眼填充/核心亮点">paper-cutting combined with modern design, handmade bamboo lamps, and small clay figures inspired by campus life.</span></span> <span class="essay-sentence" data-cn="作为连接传统民俗与现代创意的桥梁，该活动将帮助学生们以崭新的视角领略中国传统匠人精神。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Serving as a bridge between tradition and creativity, the event will help students </span><span class="tpl-slot" title="高分题眼填充/核心亮点">appreciate Chinese craftsmanship in a fresh way.</span></span> <span class="essay-sentence" data-cn="关于筹备工作，鉴于届时将有许多留学生到场参与，你能否协助我们布置座位并引导留学生前往活动场地？"><span class="tpl-skel" title="母版固定骨架/逻辑框架">As for the preparation work, given that there will be many foreign students participating in this event, could you please help us </span><span class="tpl-slot" title="高分题眼填充/核心亮点">arrange the seats and guide foreign students to the venue?</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="你的鼎力相助定能让整个活动运行得更为顺畅。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Your assistance will surely make the activity smoother.</span></span> <span class="essay-sentence" data-cn="期待在校园里与你相见。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Looking forward to seeing you on campus.</span></span> <span class="essay-sentence" data-cn="您真诚的，李明"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Yours sincerely,<br>Li Ming</span></span> </p>`,
+      templateMapping: "【母版一：事件回复类】Dear Paul + Words failed to express my delight... + 【中段具体安排与求助】展示项目（including paper-cutting...）+ 意义（Serving as a bridge...）+ 求助抓词（As for the preparation work, could you please help us...）+ 【尾段致谢致敬】Your assistance will surely make... Looking forward to...",
+      chineseTranslation: `亲爱的保罗：
+
+收到你的来信，我由衷感到欣喜。得知你对即将举办的手工艺制作展示活动感兴趣，我感到非常高兴。活动细节如下：
+
+青年手工艺人们将展示多项创新作品，包括融合了现代设计的剪纸艺术、手工竹编灯具以及灵感源自校园生活的黏土泥塑小雕像。作为连接传统民俗与现代创意的桥梁，该活动将帮助学生们以崭新的视角领略中国传统匠人精神。关于筹备工作，鉴于届时将有许多留学生到场参与，你能否协助我们布置座位并引导留学生前往活动场地？
+
+你的鼎力相助定能让整个活动运行得更为顺畅。期待在校园里与你相见。
+
+您真诚的，
+李明`,
+      chineseTranslation: `亲爱的保罗：
+
+收到你的来信，我由衷感到欣喜。得知你对即将举办的手工艺制作展示活动感兴趣，我感到非常高兴。活动细节如下：
+
+青年手工艺人们将展示多项创新作品，包括融合了现代设计的剪纸艺术、手工竹编灯具以及灵感源自校园生活的黏土泥塑小雕像。作为连接传统民俗与现代创意的桥梁，该活动将帮助学生们以崭新的视角领略中国传统匠人精神。关于筹备工作，鉴于届时将有许多留学生到场参与，你能否协助我们布置座位并引导留学生前往活动场地？
+
+你的鼎力相助定能让整个活动运行得更为顺畅。期待在校园里与你相见。
+
+您真诚的，
+李明`,
+      rubricFeedback: "【TA 任务完成】既回应了手工艺活动详情，又交代了布置座位和引导留学生的求助要点；【CC 连贯性】衔接自如，情真意切；【LR 词汇】craftsmanship in a fresh way, guide foreign students to the venue；【GRA 句式】including 介词短语，Serving as 分词短语作状语。"
+    },
+    {
+      id: "essay-2022-en2-a",
+      type: "partA",
+      exam: "en2",
+      year: "2022",
+      title: "2022年 英语二 Part A 应用文：选择推荐信 (展览选择与理由阐述)",
+      scoreTag: "大纲一档 9分",
+      prompt: "Directions: Given the choice between an art exhibition and a robot show, write an email to David recommending one and stating your reasons.",
+      content: `Dear David,
+
+Given the choice between the art exhibition and the robot show, I would recommend the latter. Since you have always been fascinated by technological innovation, the robot show is more likely to match your interests and offer you a genuinely engaging experience.
+
+More importantly, the event will probably feature intelligent machines, interactive demonstrations, and recent advances in robotics. Rather than merely observing exhibits from a distance, you may have the opportunity to operate some devices and communicate with specialists. Such first-hand exposure can not only broaden your knowledge but also inspire fresh ideas for your future studies.
+
+I hope you will enjoy the show and find the visit worthwhile.
+
+Yours sincerely,
+Li Ming`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="亲爱的大卫："><span class="tpl-skel" title="母版固定骨架/逻辑框架">Dear David,</span></span> <span class="essay-sentence" data-cn="若要在艺术展和机器人展之间作出抉择，我更推荐后者。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Given the choice between </span><span class="tpl-slot" title="高分题眼填充/核心亮点">the art exhibition and the robot show,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> I would recommend the latter.</span></span> <span class="essay-sentence" data-cn="鉴于你一直对前沿技术创新深感兴趣，机器人展显然更契合你的志趣，并能为你提供一次真正引人入胜的参访体验。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Since you have always been fascinated by </span><span class="tpl-slot" title="高分题眼填充/核心亮点">technological innovation,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> the robot show is more likely to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">match your interests and offer you a genuinely engaging experience.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="更重要的是，该展会很可能会展出前沿智能机器、互动演示以及机器人学领域的最新研究突破。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">More importantly, the event will probably feature </span><span class="tpl-slot" title="高分题眼填充/核心亮点">intelligent machines, interactive demonstrations, and recent advances in robotics.</span></span> <span class="essay-sentence" data-cn="你将不再只是远远地隔空观望展品，而是有机会亲手操作部分智能设备并与行业专家深入交流。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Rather than merely observing exhibits from a distance, you may have the opportunity to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">operate some devices and communicate with specialists.</span></span> <span class="essay-sentence" data-cn="这种第一手的切身体验不仅能拓宽你的知识面，还能为你的未来学业启发崭新灵感。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Such first-hand exposure can not only </span><span class="tpl-slot" title="高分题眼填充/核心亮点">broaden your knowledge</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> but also </span><span class="tpl-slot" title="高分题眼填充/核心亮点">inspire fresh ideas for your future studies.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="希望你会喜欢这次展览，并感到不虚此行。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">I hope you will enjoy the show and find the visit worthwhile.</span></span> <span class="essay-sentence" data-cn="您真诚的，李明"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Yours sincerely,<br>Li Ming</span></span> </p>`,
+      templateMapping: "【母版二：非事件类建议信】Given the choice between... I would recommend the latter + 【理由阐述二段】Since you have always been fascinated... More importantly... Rather than merely observing... + 【收益升华】Such first-hand exposure can not only... but also... + 【结尾寄语】I hope you will enjoy...",
+      chineseTranslation: `亲爱的大卫：
+
+若要在艺术展和机器人展之间作出抉择，我更推荐后者。鉴于你一直对前沿技术创新深感兴趣，机器人展显然更契合你的志趣，并能为你提供一次真正引人入胜的参访体验。
+
+更重要的是，该展会很可能会展出前沿智能机器、互动演示以及机器人学领域的最新研究突破。你将不再只是远远地隔空观望展品，而是有机会亲手操作部分智能设备并与行业专家深入交流。这种第一手的切身体验不仅能拓宽你的知识面，还能为你的未来学业启发崭新灵感。
+
+希望你会喜欢这次展览，并感到不虚此行。
+
+您真诚的，
+李明`,
+      chineseTranslation: `亲爱的大卫：
+
+若要在艺术展和机器人展之间作出抉择，我更推荐后者。鉴于你一直对前沿技术创新深感兴趣，机器人展显然更契合你的志趣，并能为你提供一次真正引人入胜的参访体验。
+
+更重要的是，该展会很可能会展出前沿智能机器、互动演示以及机器人学领域的最新研究突破。你将不再只是远远地隔空观望展品，而是有机会亲手操作部分智能设备并与行业专家深入交流。这种第一手的切身体验不仅能拓宽你的知识面，还能为你的未来学业启发崭新灵感。
+
+希望你会喜欢这次展览，并感到不虚此行。
+
+您真诚的，
+李明`,
+      rubricFeedback: "【TA 任务完成】非事件类典型满分卷，不写空洞流程，专注说服理由；【CC 连贯性】More importantly, Rather than 形成强对比；【LR 词汇】technological innovation, interactive demonstrations, first-hand exposure；【GRA 句式】Rather than doing 结构，not only... but also... 复合句。"
+    },
+    {
+      id: "essay-2005-en1-resign-a",
+      type: "partA",
+      exam: "en1",
+      year: "2005",
+      title: "2005年 英语一 Part A 应用文：辞职信并说明理由与致歉 (经典经典非事件书信)",
+      scoreTag: "大纲一档 10分 (官方满分示范)",
+      prompt: "Directions: Two months ago you got a job as an editor for Design & Fashions. Decide to quit. Write a letter to Mr. Wang stating reasons and making an apology. (不少于100词)",
+      content: `Dear Mr. Wang,
+
+I am writing to inform you of my decision to resign from my position as an editor for Designs & Fashions. I am sincerely grateful for the opportunity you have offered me during the past two months and for your patient guidance.
+
+However, after careful consideration, I find that the job is not quite consistent with my academic background or long-term career plan. My real interest lies in computer technology, while the present work requires much more knowledge of fashion than I expected. Therefore, I believe leaving the position now is a responsible choice.
+
+Please accept my sincere apology for any inconvenience caused by my resignation. I will do my best to finish the handover work before I leave.
+
+Yours sincerely,
+Li Ming`,
+      highlightedHTML: `<p class="essay-para"><span class="essay-sentence" data-cn="尊敬的王总："><span class="tpl-skel" title="母版固定骨架/逻辑框架">Dear Mr. Wang,</span></span> <span class="essay-sentence" data-cn="我致信告知您，我已决定辞去在《设计与时尚》杂志社担任的编辑一职。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">I am writing to inform you of my decision to resign from my position as </span><span class="tpl-slot" title="高分题眼填充/核心亮点">an editor for Designs & Fashions.</span></span> <span class="essay-sentence" data-cn="我由衷感谢您在过去两个月里为我提供的宝贵工作机会以及对我的耐心指导。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">I am sincerely grateful for the opportunity you have offered me during the past two months and for your patient guidance.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="然而，经过深思熟虑，我发现该岗位与我的专业学术背景及长远职业发展规划并不完全契合。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">However, after careful consideration, I find that the job is not quite consistent with </span><span class="tpl-slot" title="高分题眼填充/核心亮点">my academic background or long-term career plan.</span></span> <span class="essay-sentence" data-cn="我真正的志趣在于计算机科技领域，而目前的工作对时尚行业知识的要求远超我的预期。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">My real interest lies in </span><span class="tpl-slot" title="高分题眼填充/核心亮点">computer technology,</span><span class="tpl-skel" title="母版固定骨架/逻辑框架"> while the present work requires </span><span class="tpl-slot" title="高分题眼填充/核心亮点">much more knowledge of fashion than I expected.</span></span> <span class="essay-sentence" data-cn="因此，我认为此时提出离职是一个对自己和对杂志社都更为负责的抉择。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Therefore, I believe leaving the position now is a responsible choice.</span></span> </p><p class="essay-para"><span class="essay-sentence" data-cn="对于因我的辞职而给您和单位带来的任何不便，请接受我最诚挚的歉意。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Please accept my sincere apology for any inconvenience caused by my resignation.</span></span> <span class="essay-sentence" data-cn="离职之前，我定会全力以赴做好各项交接工作。"><span class="tpl-skel" title="母版固定骨架/逻辑框架">I will do my best to </span><span class="tpl-slot" title="高分题眼填充/核心亮点">finish the handover work before I leave.</span></span> <span class="essay-sentence" data-cn="您真诚的，李明"><span class="tpl-skel" title="母版固定骨架/逻辑框架">Yours sincerely,<br>Li Ming</span></span> </p>`,
+      templateMapping: "【母版二：非事件类辞职/致歉】Dear Mr. Wang + I am writing to inform you of my decision to resign... I am sincerely grateful for... + 【中段客观理由】However, after careful consideration, I find that... is not quite consistent with... My real interest lies in... while... Therefore, I believe... + 【尾段致歉与交接保证】Please accept my sincere apology... I will do my best to finish the handover work...",
+      chineseTranslation: `尊敬的王总：
+
+我致信告知您，我已决定辞去在《设计与时尚》杂志社担任的编辑一职。我由衷感谢您在过去两个月里为我提供的宝贵工作机会以及对我的耐心指导。
+
+然而，经过深思熟虑，我发现该岗位与我的专业学术背景及长远职业发展规划并不完全契合。我真正的志趣在于计算机科技领域，而目前的工作对时尚行业知识的要求远超我的预期。因此，我认为此时提出离职是一个对自己和对杂志社都更为负责的抉择。
+
+对于因我的辞职而给您和单位带来的任何不便，请接受我最诚挚的歉意。离职之前，我定会全力以赴做好各项交接工作。
+
+您真诚的，
+李明`,
+      chineseTranslation: `尊敬的王总：
+
+我致信告知您，我已决定辞去在《设计与时尚》杂志社担任的编辑一职。我由衷感谢您在过去两个月里为我提供的宝贵工作机会以及对我的耐心指导。
+
+然而，经过深思熟虑，我发现该岗位与我的专业学术背景及长远职业发展规划并不完全契合。我真正的志趣在于计算机科技领域，而目前的工作对时尚行业知识的要求远超我的预期。因此，我认为此时提出离职是一个对自己和对杂志社都更为负责的抉择。
+
+对于因我的辞职而给您和单位带来的任何不便，请接受我最诚挚的歉意。离职之前，我定会全力以赴做好各项交接工作。
+
+您真诚的，
+李明`,
+      rubricFeedback: "【TA 任务完成】辞职、理由、致歉三要素毫无遗漏，分寸感极强；【CC 连贯性】However, Therefore 逻辑清晰；【LR 词汇】consistent with academic background, finish the handover work；【GRA 句式】现在完成时、比较级、过去分词 caused by 伴随修饰。"
+    }
+  ];
+
+
+
   // Application State
   const state = {
     activeTab: 'partA',
@@ -920,6 +1377,9 @@
       partA: {},
       partB: {}
     },
+    showcaseFilter: 'all',
+    showcaseHighlightMode: true,
+    showcaseShowTranslation: false,
     theme: localStorage.getItem('essay_assembly_theme') || 'light'
   };
 
@@ -1001,7 +1461,7 @@
         state.theme = state.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', state.theme);
         localStorage.setItem('essay_assembly_theme', state.theme);
-        showToast(state.theme === 'dark' ? 'Olu: 已开启深色夜间模式 🌙' : 'Olu: 已恢复浅色清新模式 ☀️');
+        showToast(state.theme === 'dark' ? '已开启深色夜间模式 🌙' : '已恢复浅色清新模式 ☀️');
       });
     }
     if (el.printBtn) {
@@ -1032,6 +1492,8 @@
       el.main.innerHTML = renderChartsHTML();
     } else if (tab === 'toolkit') {
       el.main.innerHTML = renderToolkitHTML();
+    } else if (tab === 'examTips') {
+      el.main.innerHTML = renderExamTipsHTML();
     }
     bindInteractiveEvents();
   }
@@ -1079,7 +1541,7 @@
 
     return `
       <div class="principle-banner">
-        💡 <strong>Olu · Part A 极简破局法则：</strong>考研小作文 90% 为【事件类】（活动/竞赛/展览/招募/答复），10% 为【非事件类】（建议/投诉/道歉/辞职）。<strong>首尾固定，中段用“小说六要素”或“痛点＋对策”按题干抓词拼装</strong>，实测 100–110 词，稳拿 9 分！下方高亮黄底词槽均<strong>支持点击秒选候选词或自由手填题干词</strong>。
+        💡 <strong>英语作文 · Part A 极简破局法则：</strong>考研小作文 90% 为【事件类】（活动/竞赛/展览/招募/答复），10% 为【非事件类】（建议/投诉/道歉/辞职）。<strong>首尾固定，中段用“小说六要素”或“痛点＋对策”按题干抓词拼装</strong>，实测 100–110 词，稳拿 9 分！下方高亮黄底词槽均<strong>支持点击秒选候选词或自由手填题干词</strong>。
       </div>
 
       <!-- Mother Template 1: Event-Driven -->
@@ -1298,7 +1760,7 @@ Li Ming</div>
 
     return `
       <div class="principle-banner">
-        💡 <strong>Olu · Part B 极简破局法则：</strong>大作文无论是英一图画还是英二图表，阅卷统一遵循<strong>“三段 10 句制”（170–190 词）</strong>。首段 3–4 句快速描述（40词），二段 4 句深度论证（85词），三段 3 句建议展望（45词）。<strong>三大论证轨道通吃所有命题，搭配“无灵主语”直击阅卷高分点！</strong>
+        💡 <strong>英语作文 · Part B 极简破局法则：</strong>大作文无论是英一图画还是英二图表，阅卷统一遵循<strong>“三段 10 句制”（170–190 词）</strong>。首段 3–4 句快速描述（40词），二段 4 句深度论证（85词），三段 3 句建议展望（45词）。<strong>三大论证轨道通吃所有命题，搭配“无灵主语”直击阅卷高分点！</strong>
       </div>
 
       <!-- Quick Full Essay Assemble Bar -->
@@ -1468,7 +1930,7 @@ Li Ming</div>
 
     return `
       <div class="principle-banner">
-        💡 <strong>Olu · 图表写作核心破局原则：</strong>考场图表写作最忌讳“流水账报菜名”！阅卷考官看重的是<strong>“极值提炼、趋势聚类与深层启迪”</strong>。运用动态图【五元万能公式】与静态图【聚类对比冲突法】，15 分钟内极速输出流畅地道的考场高分段！
+        💡 <strong>英语作文 · 图表写作核心破局原则：</strong>考场图表写作最忌讳“流水账报菜名”！阅卷考官看重的是<strong>“极值提炼、趋势聚类与深层启迪”</strong>。运用动态图【五元万能公式】与静态图【聚类对比冲突法】，15 分钟内极速输出流畅地道的考场高分段！
       </div>
 
       <!-- Section 1: Chart Military Rules from PDF p. 22-26 -->
@@ -1625,7 +2087,7 @@ Li Ming</div>
   function renderToolkitHTML() {
     return `
       <div class="principle-banner">
-        💡 <strong>Olu · 连贯性与学术语域提分库：</strong>大纲评分第一档明确要求“文字连贯、句式有变化、词汇使用准确且得体”。下方收录<strong> 8 大考场黄金逻辑关系连接词</strong>、<strong> 34 个必考学术强动词</strong>以及<strong> PDF 第 34–35 页精研的“利弊与影响”高级表达</strong>。点击任意胶囊或卡片即可<strong>秒复制到剪贴板</strong>！
+        💡 <strong>英语作文 · 连贯性与学术语域提分库：</strong>大纲评分第一档明确要求“文字连贯、句式有变化、词汇使用准确且得体”。下方收录<strong> 8 大考场黄金逻辑关系连接词</strong>、<strong> 34 个必考学术强动词</strong>以及<strong> PDF 第 34–35 页精研的“利弊与影响”高级表达</strong>。点击任意胶囊或卡片即可<strong>秒复制到剪贴板</strong>！
       </div>
 
       <!-- Module 0: Evaluation Phrases from PDF p. 34-35 -->
@@ -1726,6 +2188,156 @@ Li Ming</div>
   }
 
   // -------------------------------------------------------------
+  // TAB 5: Full Exam Essay Showcase & Master Template Analysis (PDF p. 61-74)
+  // -------------------------------------------------------------
+  function renderExamTipsHTML() {
+    const currentFilter = state.showcaseFilter || 'all';
+    const filteredList = EXAM_SHOWCASE_DATA.filter(item => {
+      if (currentFilter === 'all') return true;
+      if (currentFilter === 'en1') return item.exam === 'en1';
+      if (currentFilter === 'en2') return item.exam === 'en2';
+      if (currentFilter === 'partA') return item.type === 'partA';
+      if (currentFilter === 'partB') return item.type === 'partB';
+      return true;
+    });
+
+    return `
+      <div class="principle-banner">
+        📖 <strong>全真真题范文与母版精解仓：</strong>精选历年考研英语<strong>一/二大作文与小作文经典真题范文</strong>（涵盖 2026 最新真题、2025、2024、2022 及官方满分卷）。每篇均严格标清<strong>试卷类型、考题年份、文体分类、题目要求、母版架构映射与大纲评分维度点评</strong>，直观呈现如何将前述母版与词槽无缝落实到真题考场！
+      </div>
+
+      <!-- Control Row: Filter + Highlight Mode Toggle + Legend -->
+      <div class="showcase-control-row">
+        <div class="showcase-filter-bar">
+          <span style="font-weight:750; font-size:12.5px; color:var(--ink);">🔍 快捷筛选：</span>
+          <button type="button" class="filter-btn ${currentFilter === 'all' ? 'is-active' : ''}" data-filter="all">全部真题 (${EXAM_SHOWCASE_DATA.length})</button>
+          <button type="button" class="filter-btn ${currentFilter === 'en1' ? 'is-active' : ''}" data-filter="en1">英语一</button>
+          <button type="button" class="filter-btn ${currentFilter === 'en2' ? 'is-active' : ''}" data-filter="en2">英语二</button>
+          <button type="button" class="filter-btn ${currentFilter === 'partA' ? 'is-active' : ''}" data-filter="partA">Part A 小作文</button>
+          <button type="button" class="filter-btn ${currentFilter === 'partB' ? 'is-active' : ''}" data-filter="partB">Part B 大作文</button>
+        </div>
+        <div class="showcase-legend-bar">
+          <div class="legend-item" title="橙底带下划线为固定母版骨架句及逻辑承接框架">
+            <span class="legend-sample legend-sample-skel">母版固定骨架 (框架衔接)</span>
+          </div>
+          <div class="legend-item" title="金黄高亮为针对具体真题的高分题眼填充与学术词槽">
+            <span class="legend-sample legend-sample-slot">高分题眼填充 (亮点词槽)</span>
+          </div>
+          <button type="button" class="highlight-toggle-btn ${state.showcaseHighlightMode ? 'is-active' : ''}" id="toggle-highlight-mode">
+            ${state.showcaseHighlightMode ? '🎨 高亮拆解模式 (开启中)' : '📄 纯净排版模式'}
+          </button>
+          <button type="button" class="highlight-toggle-btn ${state.showcaseShowTranslation ? 'is-active' : ''}" id="toggle-translation-mode">
+            🇨🇳 ${state.showcaseShowTranslation ? '收起全部中文对照' : '对照中文释义'}
+          </button>
+        </div>
+      </div>
+
+      <!-- Essays List -->
+      <div class="showcase-list">
+        ${filteredList.map(essay => {
+          const wordCount = countWords(essay.content);
+          return `
+            <div class="essay-showcase-card">
+              <div class="essay-showcase-header">
+                <div>
+                  <div style="font-weight:800; font-size:15px; color:var(--ink); margin-bottom:4px;">${escapeHTML(essay.title)}</div>
+                  <div class="essay-meta-tags">
+                    <span class="meta-tag ${essay.exam === 'en1' ? 'tag-en1' : 'tag-en2'}">${essay.exam === 'en1' ? '英语一' : '英语二'}</span>
+                    <span class="meta-tag ${essay.type === 'partA' ? 'tag-partA' : 'tag-partB'}">${essay.type === 'partA' ? 'Part A 小作文' : 'Part B 大作文'}</span>
+                    <span class="meta-tag tag-score">🏆 ${escapeHTML(essay.scoreTag)}</span>
+                    <span class="word-chip-pill word-chip-gold">实测 ${wordCount} 词</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-pill copy-btn" data-text="${escapeHTML(essay.content)}">📋 复制整篇范文</button>
+              </div>
+              <div class="essay-showcase-body">
+                <!-- Prompt -->
+                <div class="essay-prompt-box">
+                  <strong>📝 考题指令 (Prompt)：</strong>${escapeHTML(essay.prompt)}
+                </div>
+
+                <!-- Essay Content (Supports Click-to-Translate Sentence & Highlight Toggle) -->
+                <div class="essay-content-box">
+                  <div class="sentence-interactive-hint">
+                    <span class="sentence-interactive-hint-text">💡 <strong>点句互译：</strong>点击正文中任意英文句子，即可就地查看该句中文翻译 (手机阅读免翻滚)</span>
+                  </div>
+                  <div class="essay-text-body ${state.showcaseHighlightMode ? '' : 'hide-highlights'}">
+                    ${essay.highlightedHTML}
+                  </div>
+                </div>
+
+                <!-- Bilingual Chinese Translation Collapsible Accordion -->
+                ${essay.chineseTranslation ? `
+                <details class="essay-cn-details" ${state.showcaseShowTranslation ? 'open' : ''}>
+                  <summary class="essay-cn-summary">
+                    <span style="display:flex; align-items:center; gap:6px;">
+                      <span>🇨🇳</span>
+                      <strong>中英文对照 · 全文参考译文</strong>
+                    </span>
+                    <span class="cn-toggle-hint">点击展开/收起译文 ▾</span>
+                  </summary>
+                  <div class="essay-cn-content">
+                    ${escapeHTML(essay.chineseTranslation).replace(/\n\n/g, '<br><br>')}
+                  </div>
+                </details>
+                ` : ''}
+
+                <!-- Template Analysis & Breakdown -->
+                <div class="essay-breakdown-box">
+                  <div class="breakdown-row">
+                    <span class="breakdown-label">🧩 母版与词槽装配精析：</span>
+                    <span>${escapeHTML(essay.templateMapping)}</span>
+                  </div>
+                  <div class="breakdown-rubric">
+                    <strong>⚖️ 大纲评分要求批注与考官指导：</strong><br>
+                    ${escapeHTML(essay.rubricFeedback)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Section: 4-Tier Rubric Table from PDF p. 5-6 -->
+      <div class="template-card" style="margin-top:20px;">
+        <div class="template-card-header">
+          <span class="template-card-title">🎯 官方大纲 4 大档次评分标准对照表 (PDF 第 5–6 页权威评分细则)</span>
+        </div>
+        <div class="template-card-body">
+          <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+            <table class="exam-rubric-table" style="min-width:680px;">
+              <thead>
+                <tr>
+                  <th style="width:110px;">档次</th>
+                  <th style="width:130px;">分值区间</th>
+                  <th style="width:150px;">任务完成 (TA)</th>
+                  <th style="width:150px;">连贯逻辑 (CC)</th>
+                  <th style="width:160px;">词汇得体 (LR)</th>
+                  <th>语法句式 (GRA)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${EXAM_RUBRIC_DATA.map(r => `
+                  <tr>
+                    <td><span class="rubric-tag ${r.tagClass}">${escapeHTML(r.tier)}</span></td>
+                    <td><strong style="color:var(--ink);">${escapeHTML(r.rangeA)}</strong><br><small style="color:var(--muted);">${escapeHTML(r.rangeB)}</small></td>
+                    <td>${escapeHTML(r.task)}</td>
+                    <td>${escapeHTML(r.cc)}</td>
+                    <td>${escapeHTML(r.lr)}</td>
+                    <td>${escapeHTML(r.gra)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+
+  // -------------------------------------------------------------
   // Interactive Events Binding (Popover, Copy, Reset)
   // -------------------------------------------------------------
   function bindInteractiveEvents() {
@@ -1750,7 +2362,7 @@ Li Ming</div>
         popover.className = 'slot-dropdown-popover';
         popover.innerHTML = `
           <div class="popover-header">
-            <span>${isMobile ? '请选择替换词槽：' : '⚡ Olu 词槽装配：'}<strong>${escapeHTML(slotTitle)}</strong></span>
+            <span>${isMobile ? '请选择替换词槽：' : '⚡ 词槽装配：'}<strong>${escapeHTML(slotTitle)}</strong></span>
             <button type="button" class="popover-close-btn" aria-label="关闭选择">✕</button>
           </div>
           <div class="popover-custom-row">
@@ -1817,7 +2429,7 @@ Li Ming</div>
             if (val) {
               setSlotVal(tab, slotKey, val);
               dismissPopover();
-              showToast(`Olu: 已装配自定义词槽 [${slotTitle}]`);
+              showToast(`已装配自定义词槽 [${slotTitle}]`);
               renderContent();
             }
           };
@@ -1833,7 +2445,7 @@ Li Ming</div>
             const newText = btn.dataset.text;
             setSlotVal(tab, slotKey, newText);
             dismissPopover();
-            showToast(`Olu: 已装配 [${slotTitle}]`);
+            showToast(`已装配 [${slotTitle}]`);
             renderContent();
           });
         });
@@ -1847,7 +2459,7 @@ Li Ming</div>
         const text = btn.dataset.text;
         if (!text) return;
         navigator.clipboard.writeText(text).then(() => {
-          showToast('🍃 Olu: 已复制到剪贴板！');
+          showToast('已复制到剪贴板！');
         }).catch(() => {
           const ta = document.createElement('textarea');
           ta.value = text;
@@ -1855,7 +2467,7 @@ Li Ming</div>
           ta.select();
           document.execCommand('copy');
           document.body.removeChild(ta);
-          showToast('🍃 Olu: 已复制到剪贴板！');
+          showToast('已复制到剪贴板！');
         });
       });
     });
@@ -1866,9 +2478,9 @@ Li Ming</div>
         const text = card.dataset.text;
         if (!text) return;
         navigator.clipboard.writeText(text).then(() => {
-          showToast(`🍃 Olu: 已复制 "${text.slice(0, 32)}..."`);
+          showToast(`已复制 "${text.slice(0, 32)}..."`);
         }).catch(() => {
-          showToast('🍃 Olu: 复制成功！');
+          showToast('复制成功！');
         });
       });
     });
@@ -1880,8 +2492,83 @@ Li Ming</div>
         if (state.activeSlotChoices[tab]) {
           state.activeSlotChoices[tab] = {};
         }
-        showToast('Olu: 已恢复官方推荐默认词槽！');
+        showToast('已恢复官方推荐默认词槽！');
         renderContent();
+      });
+    });
+
+    // 5. Showcase Filter Buttons (Tab 5)
+    el.main.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.showcaseFilter = btn.dataset.filter || 'all';
+        renderContent();
+      });
+    });
+
+    // 6. Showcase Highlight Mode Toggle (Tab 5)
+    const toggleHlBtn = el.main.querySelector('#toggle-highlight-mode');
+    if (toggleHlBtn) {
+      toggleHlBtn.addEventListener('click', () => {
+        state.showcaseHighlightMode = !state.showcaseHighlightMode;
+        renderContent();
+        showToast(state.showcaseHighlightMode ? '已开启【母版骨架与高分词槽高亮对照】模式' : '已切换为【纯净阅读】排版模式');
+      });
+    }
+
+    // 7. Showcase Translation Toggle (Tab 5)
+    const toggleTransBtn = el.main.querySelector('#toggle-translation-mode');
+    if (toggleTransBtn) {
+      toggleTransBtn.addEventListener('click', () => {
+        state.showcaseShowTranslation = !state.showcaseShowTranslation;
+        renderContent();
+        showToast(state.showcaseShowTranslation ? '已展开全部中英文对照参考译文' : '已收起中英文对照译文');
+      });
+    }
+
+    // 8. Sentence-by-Sentence Interactive Click-to-Translate (Tab 5)
+    el.main.querySelectorAll('.essay-sentence').forEach(sentEl => {
+      sentEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cn = sentEl.getAttribute('data-cn');
+        if (!cn) return;
+
+        const parentPara = sentEl.closest('.essay-para') || sentEl.parentNode;
+        const existingCallout = parentPara.querySelector('.inline-trans-callout');
+        const isCurrentActive = sentEl.classList.contains('is-sentence-active');
+
+        // Deactivate other sentences in this card
+        const card = sentEl.closest('.essay-showcase-card') || el.main;
+        card.querySelectorAll('.essay-sentence').forEach(s => s.classList.remove('is-sentence-active'));
+        card.querySelectorAll('.inline-trans-callout').forEach(c => c.remove());
+
+        if (isCurrentActive && existingCallout) {
+          // Toggle off if clicked the same sentence
+          return;
+        }
+
+        // Activate this sentence
+        sentEl.classList.add('is-sentence-active');
+
+        // Create and insert inline translation callout right after this sentence
+        const callout = document.createElement('div');
+        callout.className = 'inline-trans-callout';
+        callout.innerHTML = `
+          <div class="trans-callout-inner">
+            <div class="trans-callout-header">
+              <span class="trans-callout-tag">🇨🇳 本句精准译文</span>
+              <button type="button" class="trans-callout-close" title="收起译文" aria-label="关闭">✕</button>
+            </div>
+            <div class="trans-callout-text">${escapeHTML(cn)}</div>
+          </div>
+        `;
+
+        sentEl.insertAdjacentElement('afterend', callout);
+
+        callout.querySelector('.trans-callout-close').addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          sentEl.classList.remove('is-sentence-active');
+          callout.remove();
+        });
       });
     });
   }
